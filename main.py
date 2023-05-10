@@ -5,6 +5,7 @@ import sys
 import os
 import csv
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 import threading
@@ -38,7 +39,6 @@ print(start_time)
 import time
 status.append("Initializing DAQ...")
 ni.init_daq()
-status.append("Done")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Setup Test File
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,7 +53,8 @@ def update_plot():
     # Get x and y data from CSV or DAQ
     # Update the plot with new data
     data = pd.read_csv(file_name)
-    more_data = ni.read_daq()
+#    more_data = [round(elem, 2) for elem in ni.read_daq()]
+    more_data = list(np.around(np.array(ni.read_daq()),1))
     d.append(more_data)
     df = pd.DataFrame(d)
     
@@ -69,13 +70,13 @@ def update_plot():
 #        y3 = data['y3'][-50:-1]
 
     if len(d) < 50:
-        y1 = df[0]
-        y2 = df[1]
-        y3 = df[2]
+        y1 = df[4]
+        y2 = df[5]
+        y3 = df[6]
     else:
-        y1 = df[0][-50:-1]
-        y2 = df[1][-50:-1]
-        y3 = df[2][-50:-1]
+        y1 = df[4][-50:-1]
+        y2 = df[5][-50:-1]
+        y3 = df[6][-50:-1]
     
     ax.clear()    
     ax.plot(y1, label="1", lw=0.5)
@@ -112,22 +113,78 @@ def reset_():
     start_time = QTime.currentTime()
 
 data_window = None
+tc_model = None
+pulse_model = None
 def show_data_window():
     global data_window
+    global tc_model
     # Create a window for data view
     data_window = QWidget()
     data_window.setWindowTitle("Data")
-    data_window.setGeometry(600, 50, 400, 600)
+    data_window.setGeometry(600, 100, 400, 700)
     data_window.setStyleSheet("background-color: #0f0f0f;")
     
     # Add a label to the window
-    label = QLabel("View Data Below:", data_window)
+    label = QLabel("Temperatures (F):", data_window)
+    label.setStyleSheet("color: #ffffff; font: 12px")
     layout = QVBoxLayout()
-    layout.addWidget(label)
     data_window.setLayout(layout)
 
-    # Show the Data View window
+    # Add Table for Thermocouple data
+    tc_model = QStandardItemModel(8, 2)
+    for row in range(8):
+        for column in range(2):
+            index = (row+1)+(column*8)
+            item = QStandardItem("Temp {}: NA".format(index))#, d[-1][index+3]))
+            tc_model.setItem(row, column, item)
+    table_view1 = QTableView()
+    table_view1.horizontalHeader().setVisible(False)
+    table_view1.verticalHeader().setVisible(False)
+    table_view1.setModel(tc_model)
+    table_view1.setStyleSheet("background-color: {}; color: #ffffff; font: 10px;"\
+                          "border-style: solid; border-width: 0 1px 1px 1px;".format(primary_color))
+    
+    # Add table for pulse data
+    pulse_model = QStandardItemModel(4, 1)
+    item1 = QStandardItem("Energy [Wh]:")
+    item2 = QStandardItem("Gas [cu.ft.]:")
+    item3 = QStandardItem("Water [Gal]:")
+    item4 = QStandardItem("Extra [puls]:")
+    pulse_model.setItem(0, 0, item1)
+    pulse_model.setItem(1, 0, item2)
+    pulse_model.setItem(2, 0, item3)
+    pulse_model.setItem(3, 0, item4)
+
+    table_view2 = QTableView()
+    table_view2.horizontalHeader().setVisible(False)
+    table_view2.verticalHeader().setVisible(False)
+    table_view2.setModel(pulse_model)
+    table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
+                          "border-style: solid; border-width: 0 1px 1px 1px;")
+    # Organize structure of layout 
+    layout.addWidget(label)
+    layout.addWidget(table_view1)
+    layout.addWidget(table_view2)
+
     data_window.show()
+
+def update_data_window():
+    if tc_model is not None:
+        # Update the values in the table 
+        for row in range(8):
+            for column in range(2):
+                index = (row+1)+(column*8)
+                tc_model.item(row, column).setText("Temp {}: {}".format(index, d[-1][index+3]))
+
+    if pulse_model is not None:
+        # Update the values in pulse table
+        pulse_model.item(0, 0).setText("Energy [Wh]:")
+        pulse_model.item(1, 0).setText("Gas [cu.ft.]:")
+        pulse_model.item(2, 0).setText("Water [Gal]:")
+        pulse_model.item(3, 0).setText("Extra [pul]:")
+
+
+
 
 def write_data(file_name, data):
     with open(file_name, 'a', newline='') as file_data:
@@ -234,6 +291,7 @@ status_bar.setStyleSheet("QStatusBar {background-color: #0f0f0f; color: #ffffff;
 
 # Add the status bar to the main window
 main_window.setStatusBar(status_bar)
+
 # Add a label to the status bar for system status updates
 system_status_label = QLabel("")
 system_status_label.setStyleSheet("color: #ffffff;")
@@ -303,8 +361,9 @@ main_layout.addWidget(reset_button)
 timer = QTimer()
 timer.start(1000)
 timer.timeout.connect(update_plot)
+timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_elapsed_time)
-timer.timeout.connect(update_system_status(status[-1]))
+timer.timeout.connect(lambda: update_system_status(status[-1]))
 
 
 if __name__ == "__main__":
@@ -318,7 +377,6 @@ if __name__ == "__main__":
         if not os.path.exists(current_directory + "/Data"):
             os.mkdir(current_directory + "/Data")
             print("New Data directory added...\n")
-            status.append("New Data directory added...")
         
         # Create unique data file
         os.chdir(current_directory + "/Data")
@@ -332,6 +390,7 @@ if __name__ == "__main__":
             if not os.path.isfile(os.getcwd() +'/'+ file_date +'_'+ str(i) + ".csv"):
                 file_name = file_date + '_' + str(i) + ".csv"
                 print("Adding new file: {}\n".format(file_name))
+                status.append("Adding new file: {}".format(file_name))
                 break
             elif i==49:
                 print("Maximum files achieved for the day. Please remove some and try again.")
