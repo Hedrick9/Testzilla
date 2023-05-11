@@ -11,10 +11,10 @@ from datetime import date, datetime
 import threading
 import NiDAQFuncs as ni
 from PySide6.QtCore import QTime, QTimer, QSize, Qt
-from PySide6.QtGui import QIcon, QAction, QStandardItemModel, QStandardItem
+from PySide6.QtGui import QIcon, QAction, QStandardItemModel, QStandardItem, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
         QHBoxLayout, QPushButton, QListWidget, QGridLayout, QLabel, QLineEdit, 
-        QStatusBar, QFrame, QTableView, QDialog)
+        QStatusBar, QFrame, QTableView, QDialog, QMenu)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            START OF PROGRAM
@@ -69,14 +69,14 @@ def update_plot():
 #        y2 = data['y2'][-50:-1]
 #        y3 = data['y3'][-50:-1]
 
-    if len(d) < 50:
+    if len(d) < 3600:
         y1 = df[4]
         y2 = df[5]
         y3 = df[6]
     else:
-        y1 = df[4][-50:-1]
-        y2 = df[5][-50:-1]
-        y3 = df[6][-50:-1]
+        y1 = df[4][-3600:-1]
+        y2 = df[5][-3600:-1]
+        y3 = df[6][-3600:-1]
     
     ax.clear()    
     ax.plot(y1, label="1", lw=0.5)
@@ -168,6 +168,11 @@ def show_data_window():
 
     data_window.show()
 
+tc_graph_list = []
+def show_graph_window():
+    global tc_graph_list
+    # Create a window for graph configuration
+    graph_menu.exec()
 def update_data_window():
     if tc_model is not None:
         # Update the values in the table 
@@ -239,12 +244,14 @@ table_view1.verticalHeader().setVisible(False)
 table_view1.setModel(model)
 table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
                       "border-style: solid; border-width: 0 1px 1px 1px;")
-table_view2 = QTableView(frame1)
+table_view2 = QTableView(frame2)
 table_view2.horizontalHeader().setVisible(False)
 table_view2.verticalHeader().setVisible(False)
 table_view2.setModel(model)
 table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
                       "border-style: solid; border-width: 0 1px 1px 1px;")
+
+random_label = QLabel("Test Time:", frame1)
 second_layout.addWidget(table_view1)
 second_layout.addWidget(table_view2)
 
@@ -275,8 +282,32 @@ view_data_action.triggered.connect(show_data_window)
 data_menu.addAction(view_data_action)
 
 # Add a Graph menu
-graph_menu = menubar.addMenu("Graph")
+graph_menu = QMenu("Graph", menubar)
+#graph_menu = menubar.addMenu("Graph")
+#menubar.addAction(graph_menu)
+tc_items = []
+for i in range(16):
+    item = QAction("Temp {}".format(i+1), graph_menu, checkable=True)
+    tc_items.append(item)
 
+#checkable_item1 = QAction("Temp 1", graph_menu, checkable=True)
+#checkable_item2 = QAction("Temp 2", graph_menu, checkable=True)
+#checkable_item3 = QAction("Temp 3", graph_menu, checkable=True)
+menubar.addMenu(graph_menu)
+
+g_font = QFont()
+g_font.setBold(True)
+g_font.setUnderline(True)
+graph_menu_action = QAction("Setup Graph Channels:", main_window)
+graph_menu_action.setFont(g_font)
+graph_menu.triggered.connect(show_graph_window)
+graph_menu.addAction(graph_menu_action)
+
+for i in range(16):
+    graph_menu.addAction(tc_items[i])
+#graph_menu.addAction(checkable_item1)
+#graph_menu.addAction(checkable_item2)
+#graph_menu.addAction(checkable_item3)
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
 
@@ -364,7 +395,7 @@ timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_elapsed_time)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-
+timer.timeout.connect(lambda: write_data(file_name, d[-1]))
 
 if __name__ == "__main__":
 
