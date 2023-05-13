@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 import threading
-import NiDAQFuncs as ni
+import niDAQFuncs as ni
 from PySide6.QtCore import QTime, QTimer, QSize, Qt
 from PySide6.QtGui import QIcon, QAction, QStandardItemModel, QStandardItem, QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
@@ -21,14 +21,14 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Status Updates from System
 status = []
-# Test Status
-testing = False
+testing = False # Test Status
 # Simulated Data File 
 file_name = "scratch_data_0.csv"
 # Color Palette
 primary_color = "#0f0f0f"
 secondary_color = "#2b2b2a"
 font_color1 = "#ffffff"
+font_style = "Courier New"
 start_time = QTime.currentTime()
 print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +36,6 @@ print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #daq_thread = threading.Thread(target=ni.init_daq, args=(1, True,))
 #daq_thread.start()
-import time
 status.append("Initializing DAQ...")
 ni.init_daq()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,15 +48,36 @@ ni.init_daq()
 # Define relevant functions prior to their call
 # Define the update_plot function to update the Matplotlib plot
 d = []
+last_data = [0, 0, 0, 0]
+pulse_d = [0, 0, 0, 0]
+pulse_reset = [0, 0, 0, 0]
+def get_data():
+    global last_data
+    global pulse_d
+    global pulse_reset
+    tod = datetime.now().strftime("%H:%M:%S")
+    # Try to read in data from ni hardware; otherwise return list of 0's
+    try:
+        data_ = list(np.around(np.array(ni.read_daq()),1))
+        data = list(np.array(data_[:4])-np.array(last_data)) + ["open" if x > 4000 else x for x in data_[4:]]
+        data.insert(0, tod)
+        data.insert(1, 0)
+        d.append(data)
+        pulse_d = list(np.array(data_[:4])-np.array(pulse_reset))
+        last_data = data_[:4]
+    except Exception as e:
+        print(e)
+        status.append("error reading from ni-DAQ")
+        data = list(np.zeros(20))
+        data.insert(0, tod)
+        d.append(data)
+
 def update_plot():
-    # Get x and y data from CSV or DAQ
     # Update the plot with new data
-    data = pd.read_csv(file_name)
-#    more_data = [round(elem, 2) for elem in ni.read_daq()]
-    more_data = list(np.around(np.array(ni.read_daq()),1))
-    d.append(more_data)
+    #data = pd.read_csv(file_name)
     df = pd.DataFrame(d)
-    
+
+# Use for simulated data stream    
 #    if len(data) < 50:
 #        x = data['Time']
 #        y1 = data['y1']
@@ -96,21 +116,38 @@ def update_plot():
 
 
 def update_system_status(status):
-    
+     
     system_status_label.setText(status)
 
 # Slot function for handling start button click event
-def start_graph():
+def start_test():
+    global testing
+    global start_time
+    global d
+    global pulse_d
+    global pulse_reset
+    start_time = QTime.currentTime()
+    testing = True
+    d = []
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
+    pulse_reset = pulse_d
+    status.append("testing in progress...")
 
 # Slot function for handling stop button click event
-def stop_graph():
+def stop_test():
+    global testing
+    testing = False
     timer.stop()  # Stop the timer to stop updating the plot
+    status.append("testing concluded.")
+    update_system_status(status[-1])
 
 # Slot function for handling reset button click event
 def reset_():
     global start_time
+    global pulse_d
+    global pulse_reset
     start_time = QTime.currentTime()
+    pulse_reset = pulse_d
 
 data_window = None
 tc_model = None
@@ -118,24 +155,30 @@ pulse_model = None
 def show_data_window():
     global data_window
     global tc_model
+    global pulse_model
     # Create a window for data view
     data_window = QWidget()
     data_window.setWindowTitle("Data")
     data_window.setGeometry(600, 100, 400, 700)
     data_window.setStyleSheet("background-color: #0f0f0f;")
     
-    # Add a label to the window
-    label = QLabel("Temperatures (F):", data_window)
-    label.setStyleSheet("color: #ffffff; font: 12px")
     layout = QVBoxLayout()
     data_window.setLayout(layout)
-
+    # Add a labels to the window
+    label1 = QLabel("Temperatures (F):", data_window)
+    label1.setStyleSheet("color: #ffffff; font: 12px; font-weight: bold; \
+            font-family:{}; text-decoration: underline;".format(font_style))
+    
+    label2 = QLabel("Energy & Water:", data_window)
+    label2.setStyleSheet("color: #ffffff; font: 12px; font-weight: bold; \
+            font-family:{}; text-decoration: underline;".format(font_style))
+    
     # Add Table for Thermocouple data
     tc_model = QStandardItemModel(8, 2)
     for row in range(8):
         for column in range(2):
             index = (row+1)+(column*8)
-            item = QStandardItem("Temp {}: NA".format(index))#, d[-1][index+3]))
+            item = QStandardItem("Temp {}: NA".format(index))
             tc_model.setItem(row, column, item)
     table_view1 = QTableView()
     table_view1.horizontalHeader().setVisible(False)
@@ -145,16 +188,33 @@ def show_data_window():
                           "border-style: solid; border-width: 0 1px 1px 1px;".format(primary_color))
     
     # Add table for pulse data
-    pulse_model = QStandardItemModel(4, 1)
-    item1 = QStandardItem("Energy [Wh]:")
-    item2 = QStandardItem("Gas [cu.ft.]:")
-    item3 = QStandardItem("Water [Gal]:")
-    item4 = QStandardItem("Extra [puls]:")
+    pulse_model = QStandardItemModel(3, 4)
+    item1 = QStandardItem("Electric Energy:")
+    item2 = QStandardItem("Interval: NA")
+    item3 = QStandardItem("Total: NA")
+    item4 = QStandardItem("Gas Energy:")
+    item5 = QStandardItem("Interval: NA")
+    item6 = QStandardItem("Total: NA")
+    item7 = QStandardItem("Water:")
+    item8 = QStandardItem("Interval: NA")
+    item9 = QStandardItem("Total: NA")
+    item10 = QStandardItem("Extra:")
+    item11 = QStandardItem("Interval: NA")
+    item12 = QStandardItem("Total: NA")
+
     pulse_model.setItem(0, 0, item1)
     pulse_model.setItem(1, 0, item2)
-    pulse_model.setItem(2, 0, item3)
-    pulse_model.setItem(3, 0, item4)
-
+    pulse_model.setItem(2, 0, item3) # electric total
+    pulse_model.setItem(0, 1, item4)
+    pulse_model.setItem(1, 1, item5)
+    pulse_model.setItem(2, 1, item6) # gas total
+    pulse_model.setItem(0, 2, item7)
+    pulse_model.setItem(1, 2, item8) 
+    pulse_model.setItem(2, 2, item9) # water total
+    pulse_model.setItem(0, 3, item10)
+    pulse_model.setItem(1, 3, item11)
+    pulse_model.setItem(2, 3, item12) # extra total
+    
     table_view2 = QTableView()
     table_view2.horizontalHeader().setVisible(False)
     table_view2.verticalHeader().setVisible(False)
@@ -162,8 +222,9 @@ def show_data_window():
     table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
                           "border-style: solid; border-width: 0 1px 1px 1px;")
     # Organize structure of layout 
-    layout.addWidget(label)
+    layout.addWidget(label1)
     layout.addWidget(table_view1)
+    layout.addWidget(label2)
     layout.addWidget(table_view2)
 
     data_window.show()
@@ -173,28 +234,30 @@ def show_graph_window():
     global tc_graph_list
     # Create a window for graph configuration
     graph_menu.exec()
+
 def update_data_window():
+
     if tc_model is not None:
         # Update the values in the table 
         for row in range(8):
             for column in range(2):
                 index = (row+1)+(column*8)
-                tc_model.item(row, column).setText("Temp {}: {}".format(index, d[-1][index+3]))
+                tc_model.item(row, column).setText("Temp {}: {}".format(index, d[-1][index+5]))
 
     if pulse_model is not None:
         # Update the values in pulse table
-        pulse_model.item(0, 0).setText("Energy [Wh]:")
-        pulse_model.item(1, 0).setText("Gas [cu.ft.]:")
-        pulse_model.item(2, 0).setText("Water [Gal]:")
-        pulse_model.item(3, 0).setText("Extra [pul]:")
-
-
-
+        for i in range(4):
+            pulse_model.item(1, i).setText("Interval: {}".format(d[-1][i+2]))
+        for i in range(4):
+            pulse_model.item(2, i).setText("Total: {}".format(pulse_d[i]))
+           
 
 def write_data(file_name, data):
-    with open(file_name, 'a', newline='') as file_data:
-        csvWriter = csv.writer(file_data, delimiter=',')
-        csvWriter.writerow(data)
+    global testing
+    if testing:
+        with open(file_name, 'a', newline='') as file_data:
+            csvWriter = csv.writer(file_data, delimiter=',')
+            csvWriter.writerow(data)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,17 +296,22 @@ second_layout.addWidget(frame2)
 main_layout.addLayout(second_layout)
 
 # Create a QStandardItemModel for data display
-model = QStandardItemModel(4, 2)
-for row in range(4):
-    for column in range(2):
-        item = QStandardItem("Row {}, Column {}".format(row, column))
-        model.setItem(row, column, item)
+model = QStandardItemModel(2, 1)
+#for row in range(4):
+#    for column in range(2):
+#        item = QStandardItem("Row {}, Column {}".format(row, column))
+#        model.setItem(row, column, item)
+time_item1 = QStandardItem("Test Time:")
+time_item2 = QStandardItem("{}".format("0.0"))
+model.setItem(0, 0, time_item1)
+model.setItem(1, 0, time_item2)
 table_view1 = QTableView(frame1)
 table_view1.horizontalHeader().setVisible(False)
 table_view1.verticalHeader().setVisible(False)
 table_view1.setModel(model)
-table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-                      "border-style: solid; border-width: 0 1px 1px 1px;")
+table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 15px;"\
+        "font-family:{}; font-weight: bold; border-style: solid;"\
+        "border-width: 0 1px 1px 1px;".format(font_style))
 table_view2 = QTableView(frame2)
 table_view2.horizontalHeader().setVisible(False)
 table_view2.verticalHeader().setVisible(False)
@@ -251,7 +319,6 @@ table_view2.setModel(model)
 table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
                       "border-style: solid; border-width: 0 1px 1px 1px;")
 
-random_label = QLabel("Test Time:", frame1)
 second_layout.addWidget(table_view1)
 second_layout.addWidget(table_view2)
 
@@ -261,7 +328,8 @@ second_layout.addWidget(table_view2)
 # Create a menu bar object
 menubar = main_window.menuBar()
 menubar.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-                      "border-style: solid; border-width: 0 1px 1px 1px;")
+        "font-family:{}; font-weight: bold; border-style: solid;"\
+        "border-width: 0 1px 1px 1px;".format(font_style))
 
 # Add a File menu
 file_menu = menubar.addMenu("File")
@@ -283,16 +351,10 @@ data_menu.addAction(view_data_action)
 
 # Add a Graph menu
 graph_menu = QMenu("Graph", menubar)
-#graph_menu = menubar.addMenu("Graph")
-#menubar.addAction(graph_menu)
 tc_items = []
-for i in range(16):
+for i in range(8):
     item = QAction("Temp {}".format(i+1), graph_menu, checkable=True)
     tc_items.append(item)
-
-#checkable_item1 = QAction("Temp 1", graph_menu, checkable=True)
-#checkable_item2 = QAction("Temp 2", graph_menu, checkable=True)
-#checkable_item3 = QAction("Temp 3", graph_menu, checkable=True)
 menubar.addMenu(graph_menu)
 
 g_font = QFont()
@@ -303,11 +365,12 @@ graph_menu_action.setFont(g_font)
 graph_menu.triggered.connect(show_graph_window)
 graph_menu.addAction(graph_menu_action)
 
-for i in range(16):
+for i in range(8):
     graph_menu.addAction(tc_items[i])
-#graph_menu.addAction(checkable_item1)
-#graph_menu.addAction(checkable_item2)
-#graph_menu.addAction(checkable_item3)
+for action in graph_menu.actions():
+    if action.isCheckable() and action.isChecked():
+        print(action.text())
+
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
 
@@ -339,13 +402,10 @@ def update_elapsed_time():
 # Calculate the elapsed time since the program started
     time_difference = start_time.secsTo(QTime.currentTime())
     elapsed_time = QTime(0, 0, 0).addSecs(time_difference).toString("hh:mm:ss")
-   #  
-   # hours = elapsed_time.hour()
-   # minutes = elapsed_time.minute() 
-   # seconds = elapsed_time.second() % 60
-   # Update the label text with the elapsed time
+    test_time = round(time_difference / 60, 2)
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
-
+    
+    model.item(1, 0).setText("{}".format(test_time))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -356,12 +416,12 @@ button_style =  "QPushButton {background-color: #333333; color: #ffffff;}" \
 # Create a "Start" push button and its slot for handling button click event
 start_button = QPushButton("Start")
 start_button.setStyleSheet(button_style)
-start_button.clicked.connect(start_graph)
+start_button.clicked.connect(start_test)
 
 # Create a "Stop" push button
 stop_button = QPushButton("Stop")
 stop_button.setStyleSheet(button_style)
-stop_button.clicked.connect(stop_graph)
+stop_button.clicked.connect(stop_test)
 
 # Create a "Reset" push button
 reset_button = QPushButton("Reset")
@@ -391,6 +451,7 @@ main_layout.addWidget(reset_button)
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
 timer.start(1000)
+timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_elapsed_time)
