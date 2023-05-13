@@ -11,7 +11,8 @@ from datetime import date, datetime
 import threading
 import niDAQFuncs as ni
 from PySide6.QtCore import QTime, QTimer, QSize, Qt
-from PySide6.QtGui import QIcon, QAction, QStandardItemModel, QStandardItem, QFont
+from PySide6.QtGui import (QIcon, QAction, QStandardItemModel, QStandardItem, 
+        QFont, QPixmap)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
         QHBoxLayout, QPushButton, QListWidget, QGridLayout, QLabel, QLineEdit, 
         QStatusBar, QFrame, QTableView, QDialog, QMenu)
@@ -25,10 +26,11 @@ testing = False # Test Status
 # Simulated Data File 
 file_name = "scratch_data_0.csv"
 # Color Palette
-primary_color = "#0f0f0f"
+primary_color = "#000000" #"#0f0f0f" # "#f0a2fc" 
 secondary_color = "#2b2b2a"
+tri_color = "#121212"  #"#facffa"
 font_color1 = "#ffffff"
-font_style = "Courier New"
+font_style = "Helvetica"
 start_time = QTime.currentTime()
 print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,37 +78,33 @@ def update_plot():
     # Update the plot with new data
     #data = pd.read_csv(file_name)
     df = pd.DataFrame(d)
-
-# Use for simulated data stream    
-#    if len(data) < 50:
-#        x = data['Time']
-#        y1 = data['y1']
-#        y2 = data['y2']
-#        y3 = data['y3']
-#    else:
-#        x = data['Time'][-50:-1]
-#        y1 = data['y1'][-50:-1]
-#        y2 = data['y2'][-50:-1]
-#        y3 = data['y3'][-50:-1]
-
-    if len(d) < 3600:
-        y1 = df[4]
-        y2 = df[5]
-        y3 = df[6]
+    # Create list of tc channels to graph    
+    if graph_menu is not None:
+        tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
+        tc_list = [int(name.split()[1]) for name in tc_list_]
+    
+    # Graph tc channels in list
+    if len(d) < 3600 and len(tc_list)>0:
+        ax.clear()
+        for item in tc_list:
+            ax.plot(df[item+5], label=str(item), lw=0.5)
+    elif len(d) >= 3600 and len(tc_list)>0:
+        ax.clear()
+        for item in tc_list:
+            ax.plot(df[item+5][-3600:-1])
+    # Graph tc channel 1 if none selected
     else:
-        y1 = df[4][-3600:-1]
-        y2 = df[5][-3600:-1]
-        y3 = df[6][-3600:-1]
+        if len(df) < 3600:
+            ax.clear()
+            ax.plot(df[6], label="1", lw=0.5)
+        else:
+            ax.clear()
+            ax.plot(df[6][-3600:-1], label="1", lw=0.5)
     
-    ax.clear()    
-    ax.plot(y1, label="1", lw=0.5)
-    ax.plot(y2, label="2", lw=0.5)
-    ax.plot(y3, label="3", lw=0.5)
-    
-   
-    ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor="#ffffff")
-    ax.set_facecolor("#121212")
-    ax.tick_params(labelbottom=False, labelcolor="#ffffff", color="#ffffff", labelsize=8)
+    # Format Plot   
+    ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=font_color1)
+    ax.set_facecolor(tri_color)
+    ax.tick_params(labelbottom=False, labelcolor=font_color1, color="#ffffff", labelsize=8)
     #ax.spines[:].set_visible(False)#set_color("#ffffff")
     ax.spines[:].set_color(secondary_color)
     ax.spines[:].set_linewidth(0.25)
@@ -184,8 +182,8 @@ def show_data_window():
     table_view1.horizontalHeader().setVisible(False)
     table_view1.verticalHeader().setVisible(False)
     table_view1.setModel(tc_model)
-    table_view1.setStyleSheet("background-color: {}; color: #ffffff; font: 10px;"\
-                          "border-style: solid; border-width: 0 1px 1px 1px;".format(primary_color))
+    table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
+                          "border-style: solid; border-width: 0 1px 1px 1px;")
     
     # Add table for pulse data
     pulse_model = QStandardItemModel(3, 4)
@@ -229,9 +227,7 @@ def show_data_window():
 
     data_window.show()
 
-tc_graph_list = []
 def show_graph_window():
-    global tc_graph_list
     # Create a window for graph configuration
     graph_menu.exec()
 
@@ -273,7 +269,7 @@ app.setWindowIcon(QIcon("tz-icon.png"))
 main_window = QMainWindow()
 main_window.setWindowTitle("Testzilla")
 main_window.setGeometry(100, 50, 800, 650)
-main_window.setStyleSheet("QMainWindow {background-color: #0f0f0f; border: 1px solid white;}")
+main_window.setStyleSheet("QMainWindow {background-color: #000000;border: 1px solid white;}")
 
 # Create central widget for main window to hold other widgets
 central_widget = QWidget()
@@ -289,8 +285,8 @@ main_window.setLayout(main_layout)
 second_layout = QHBoxLayout()
 frame1 = QFrame()
 frame1.setFrameShape(QFrame.Box)
-frame2 = QFrame()
-frame2.setFrameShape(QFrame.Box)
+frame2 = QLabel()
+frame2.setPixmap(QPixmap("fstc_logo2.png"))
 second_layout.addWidget(frame1)
 second_layout.addWidget(frame2)
 main_layout.addLayout(second_layout)
@@ -309,18 +305,11 @@ table_view1 = QTableView(frame1)
 table_view1.horizontalHeader().setVisible(False)
 table_view1.verticalHeader().setVisible(False)
 table_view1.setModel(model)
-table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 15px;"\
+table_view1.setStyleSheet("background-color: #000000; color: #ffffff; font: 15px;"\
         "font-family:{}; font-weight: bold; border-style: solid;"\
         "border-width: 0 1px 1px 1px;".format(font_style))
-table_view2 = QTableView(frame2)
-table_view2.horizontalHeader().setVisible(False)
-table_view2.verticalHeader().setVisible(False)
-table_view2.setModel(model)
-table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-                      "border-style: solid; border-width: 0 1px 1px 1px;")
 
 second_layout.addWidget(table_view1)
-second_layout.addWidget(table_view2)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                Menu Bar
@@ -328,8 +317,8 @@ second_layout.addWidget(table_view2)
 # Create a menu bar object
 menubar = main_window.menuBar()
 menubar.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-        "font-family:{}; font-weight: bold; border-style: solid;"\
-        "border-width: 0 1px 1px 1px;".format(font_style))
+        "font-family:{}; border-style: solid;"\
+        "border-width: 0 1px 1px 1px;".format(font_style)) #; font-weight: bold
 
 # Add a File menu
 file_menu = menubar.addMenu("File")
@@ -367,9 +356,6 @@ graph_menu.addAction(graph_menu_action)
 
 for i in range(8):
     graph_menu.addAction(tc_items[i])
-for action in graph_menu.actions():
-    if action.isCheckable() and action.isChecked():
-        print(action.text())
 
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
@@ -410,22 +396,28 @@ def update_elapsed_time():
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set push button styles
-button_style =  "QPushButton {background-color: #333333; color: #ffffff;}" \
+button_style1 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+                "QPushButton:hover {background-color: #225c40;}" \
+                "QPushButton:pressed {background-color: #777777;}"
+button_style2 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+                "QPushButton:hover {background-color: #b8494d;}" \
+                "QPushButton:pressed {background-color: #777777;}"
+button_style3 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
                 "QPushButton:hover {background-color: #555555;}" \
                 "QPushButton:pressed {background-color: #777777;}"
 # Create a "Start" push button and its slot for handling button click event
 start_button = QPushButton("Start")
-start_button.setStyleSheet(button_style)
+start_button.setStyleSheet(button_style1)
 start_button.clicked.connect(start_test)
 
 # Create a "Stop" push button
 stop_button = QPushButton("Stop")
-stop_button.setStyleSheet(button_style)
+stop_button.setStyleSheet(button_style2)
 stop_button.clicked.connect(stop_test)
 
 # Create a "Reset" push button
 reset_button = QPushButton("Reset")
-reset_button.setStyleSheet(button_style)
+reset_button.setStyleSheet(button_style3)
 reset_button.clicked.connect(reset_)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
