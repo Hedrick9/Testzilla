@@ -124,21 +124,24 @@ def start_test():
     global d
     global pulse_d
     global pulse_reset
+    global status_indicator
     start_time = QTime.currentTime()
     testing = True
     d = []
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
     pulse_reset = pulse_d
     status.append("testing in progress...")
+    status_indicator.setStyleSheet("background-color: #225c40;")
 
 # Slot function for handling stop button click event
 def stop_test():
     global testing
+    global status_indicator
     testing = False
     timer.stop()  # Stop the timer to stop updating the plot
     status.append("testing concluded.")
     update_system_status(status[-1])
-
+    status_indicator.setStyleSheet("background-color: #b8494d;")
 # Slot function for handling reset button click event
 def reset_():
     global start_time
@@ -283,33 +286,37 @@ main_window.setLayout(main_layout)
 
 # Create Horizontal layout for more data displays
 second_layout = QHBoxLayout()
-frame1 = QFrame()
-frame1.setFrameShape(QFrame.Box)
-frame2 = QLabel()
-frame2.setPixmap(QPixmap("fstc_logo2.png"))
-second_layout.addWidget(frame1)
-second_layout.addWidget(frame2)
 main_layout.addLayout(second_layout)
 
-# Create a QStandardItemModel for data display
-model = QStandardItemModel(2, 1)
-#for row in range(4):
-#    for column in range(2):
-#        item = QStandardItem("Row {}, Column {}".format(row, column))
-#        model.setItem(row, column, item)
-time_item1 = QStandardItem("Test Time:")
-time_item2 = QStandardItem("{}".format("0.0"))
-model.setItem(0, 0, time_item1)
-model.setItem(1, 0, time_item2)
-table_view1 = QTableView(frame1)
-table_view1.horizontalHeader().setVisible(False)
-table_view1.verticalHeader().setVisible(False)
-table_view1.setModel(model)
-table_view1.setStyleSheet("background-color: #000000; color: #ffffff; font: 15px;"\
-        "font-family:{}; font-weight: bold; border-style: solid;"\
-        "border-width: 0 1px 1px 1px;".format(font_style))
+main_logo = QLabel()
+main_logo.setPixmap(QPixmap("fstc_logo2.png"))
+second_layout.addWidget(main_logo)
 
-second_layout.addWidget(table_view1)
+time_layout = QVBoxLayout()
+second_layout.addLayout(time_layout)
+time_logo = QLabel()
+time_logo.setPixmap(QPixmap("test_time1.png"))
+time_logo.setAlignment(Qt.AlignCenter)
+time_layout.addWidget(time_logo)
+# Create a label for test time
+time_label = QLabel("0.0")
+time_label.setStyleSheet("color: #ffffff; font: 35px; font-weight: bold; \
+            font-family:{};".format(font_style))
+time_label.setAlignment(Qt.AlignCenter)
+time_layout.addWidget(time_label)
+
+status_layout = QVBoxLayout()
+second_layout.addLayout(status_layout)
+status_label = QLabel()
+status_label.setPixmap(QPixmap("status1.png"))
+status_label.setAlignment(Qt.AlignCenter)
+status_layout.addWidget(status_label)
+status_indicator = QLabel()
+status_indicator.setFixedSize(30, 30)
+status_indicator.setStyleSheet("background-color: #b8494d;")
+status_indicator.setAlignment(Qt.AlignCenter)
+#status_indicator.setPixmap(QPixmap("status1.png"))
+status_layout.addWidget(status_indicator)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                Menu Bar
@@ -391,7 +398,7 @@ def update_elapsed_time():
     test_time = round(time_difference / 60, 2)
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
     
-    model.item(1, 0).setText("{}".format(test_time))
+    time_label.setText("{}".format(test_time))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
