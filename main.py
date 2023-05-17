@@ -6,6 +6,7 @@ import os
 import csv
 import pandas as pd
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 import threading
@@ -32,18 +33,14 @@ tri_color = "#121212"  #"#facffa"
 font_color1 = "#ffffff"
 font_style = "Helvetica"
 start_time = QTime.currentTime()
+t_zero = time.time()
 print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #daq_thread = threading.Thread(target=ni.init_daq, args=(1, True,))
 #daq_thread.start()
-status.append("Initializing DAQ...")
 ni.init_daq()
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                               Setup Test File
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,12 +55,13 @@ def get_data():
     global pulse_d
     global pulse_reset
     tod = datetime.now().strftime("%H:%M:%S")
+    test_time = round((time.time()-t_zero)/60, 2)
     # Try to read in data from ni hardware; otherwise return list of 0's
     try:
         data_ = list(np.around(np.array(ni.read_daq()),1))
         data = list(np.array(data_[:4])-np.array(last_data)) + ["open" if x > 4000 else x for x in data_[4:]]
         data.insert(0, tod)
-        data.insert(1, 0)
+        data.insert(1, test_time)
         d.append(data)
         pulse_d = list(np.array(data_[:4])-np.array(pulse_reset))
         last_data = data_[:4]
@@ -72,6 +70,7 @@ def get_data():
         status.append("error reading from ni-DAQ")
         data = list(np.zeros(20))
         data.insert(0, tod)
+        data.insert(1, test_time)
         d.append(data)
 
 def update_plot():
@@ -121,17 +120,21 @@ def update_system_status(status):
 def start_test():
     global testing
     global start_time
+    global t_zero
     global d
     global pulse_d
     global pulse_reset
     global status_indicator
     start_time = QTime.currentTime()
+    t_zero = time.time()
     testing = True
     d = []
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
     pulse_reset = pulse_d
     status.append("testing in progress...")
-    status_indicator.setStyleSheet("background-color: #225c40;")
+    status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
+        color: {}; font-weight: bold;".format(font_color1))
+    status_indicator.setText("Recording")
 
 # Slot function for handling stop button click event
 def stop_test():
@@ -141,13 +144,17 @@ def stop_test():
     timer.stop()  # Stop the timer to stop updating the plot
     status.append("testing concluded.")
     update_system_status(status[-1])
-    status_indicator.setStyleSheet("background-color: #b8494d;")
+    status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
+        color: {}; font-weight: bold;".format(font_color1))
+    status_indicator.setText("Not Recording")
 # Slot function for handling reset button click event
 def reset_():
     global start_time
     global pulse_d
     global pulse_reset
+    global t_zero
     start_time = QTime.currentTime()
+    t_zero = time.time()
     pulse_reset = pulse_d
 
 data_window = None
@@ -185,7 +192,7 @@ def show_data_window():
     table_view1.horizontalHeader().setVisible(False)
     table_view1.verticalHeader().setVisible(False)
     table_view1.setModel(tc_model)
-    table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
+    table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
                           "border-style: solid; border-width: 0 1px 1px 1px;")
     
     # Add table for pulse data
@@ -220,7 +227,7 @@ def show_data_window():
     table_view2.horizontalHeader().setVisible(False)
     table_view2.verticalHeader().setVisible(False)
     table_view2.setModel(pulse_model)
-    table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
+    table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
                           "border-style: solid; border-width: 0 1px 1px 1px;")
     # Organize structure of layout 
     layout.addWidget(label1)
@@ -241,7 +248,7 @@ def update_data_window():
         for row in range(8):
             for column in range(2):
                 index = (row+1)+(column*8)
-                tc_model.item(row, column).setText("Temp {}: {}".format(index, d[-1][index+5]))
+                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+5]))
 
     if pulse_model is not None:
         # Update the values in pulse table
@@ -271,7 +278,7 @@ app.setWindowIcon(QIcon("tz-icon.png"))
 # Create the main window for the application
 main_window = QMainWindow()
 main_window.setWindowTitle("Testzilla")
-main_window.setGeometry(100, 50, 800, 650)
+main_window.setGeometry(100, 50, 900, 800)
 main_window.setStyleSheet("QMainWindow {background-color: #000000;border: 1px solid white;}")
 
 # Create central widget for main window to hold other widgets
@@ -280,44 +287,73 @@ main_window.setCentralWidget(central_widget)
 
 # Create a vertical layout for the widget
 main_layout = QVBoxLayout(central_widget)
+main_layout.setSpacing(0)
 
 # Set the layout for the widget
 main_window.setLayout(main_layout)
 
-# Create Horizontal layout for more data displays
-second_layout = QHBoxLayout()
-main_layout.addLayout(second_layout)
+# Header Section
+header_widget = QWidget()
+header_widget.setMaximumHeight(135)
+header_layout = QHBoxLayout(header_widget)
+main_layout.addWidget(header_widget)
 
+# Subsection 1: Logo
 main_logo = QLabel()
 main_logo.setPixmap(QPixmap("fstc_logo2.png"))
-second_layout.addWidget(main_logo)
+header_layout.addWidget(main_logo)
 
+# Subsection 2: Test Time
 time_layout = QVBoxLayout()
-second_layout.addLayout(time_layout)
-time_logo = QLabel()
-time_logo.setPixmap(QPixmap("test_time1.png"))
-time_logo.setAlignment(Qt.AlignCenter)
-time_layout.addWidget(time_logo)
-# Create a label for test time
-time_label = QLabel("0.0")
-time_label.setStyleSheet("color: #ffffff; font: 35px; font-weight: bold; \
+time_label = QLabel("TEST TIME:")
+time_label.setStyleSheet("color: #ffffff; font: 30px; font-weight: bold; \
             font-family:{};".format(font_style))
+#time_label.setPixmap(QPixmap("test_time1.png"))
 time_label.setAlignment(Qt.AlignCenter)
 time_layout.addWidget(time_label)
+time_label_value = QLabel("0.0")
+time_label_value.setStyleSheet("color: #ffffff; font: 30px; font-weight: bold; \
+            font-family:{};".format(font_style))
+time_label_value.setAlignment(Qt.AlignCenter)
+time_layout.addWidget(time_label_value)
+header_layout.addLayout(time_layout)
 
+# Subsection 3: Status and Ambient Temp
 status_layout = QVBoxLayout()
-second_layout.addLayout(status_layout)
-status_label = QLabel()
-status_label.setPixmap(QPixmap("status1.png"))
+status_label = QLabel("STATUS:")
+status_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
+            font-family:{};".format(font_style))
+#status_label.setPixmap(QPixmap("status1.png"))
 status_label.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(status_label)
-status_indicator = QLabel()
-status_indicator.setFixedSize(30, 30)
-status_indicator.setStyleSheet("background-color: #b8494d;")
+status_indicator = QLabel("Not Recording")
+status_indicator.setFixedSize(250, 30)
+status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
+        color: {}; font-weight: bold; border-style: solid;".format(font_color1))
 status_indicator.setAlignment(Qt.AlignCenter)
 #status_indicator.setPixmap(QPixmap("status1.png"))
 status_layout.addWidget(status_indicator)
+ambient_label = QLabel("Ambient:")
+ambient_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
+            font-family:{};".format(font_style))
+ambient_label.setAlignment(Qt.AlignCenter)
+ambient_label_value = QLabel("NA")
+ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
+            font-family:{};".format(font_style))
+ambient_label_value.setAlignment(Qt.AlignCenter)
+status_layout.addWidget(ambient_label)
+status_layout.addWidget(ambient_label_value)
+header_layout.addLayout(status_layout)
 
+border_line1 = QFrame()
+border_line1.setFrameShape(QFrame.HLine)
+border_line1.setFrameShadow(QFrame.Sunken)
+border_line1.setStyleSheet("color: #ffffff; background-color: #ffffff; border-width: 1px;")
+border_line2 = QFrame()
+border_line2.setFrameShape(QFrame.HLine)
+border_line2.setFrameShadow(QFrame.Sunken)
+border_line2.setStyleSheet("color: #ffffff; background-color: #ffffff; border-width: 1px;")
+main_layout.addWidget(border_line1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                Menu Bar
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -395,10 +431,11 @@ def update_elapsed_time():
 # Calculate the elapsed time since the program started
     time_difference = start_time.secsTo(QTime.currentTime())
     elapsed_time = QTime(0, 0, 0).addSecs(time_difference).toString("hh:mm:ss")
-    test_time = round(time_difference / 60, 2)
+    test_time = round((time.time()-t_zero)/60, 2)
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
     
-    time_label.setText("{}".format(test_time))
+    time_label_value.setText("{}".format(test_time))
+    ambient_label_value.setText("{}".format(d[-1][6]))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -439,14 +476,17 @@ ax.set_facecolor(primary_color)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Layout Organization
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Add the canvas to the layout
+# Add the plot canvas to the layout
 main_layout.addWidget(canvas)
+main_layout.addWidget(border_line2)
 # Add the push buttons to the layout
 main_layout.addWidget(start_button)
 main_layout.addWidget(stop_button)
 main_layout.addWidget(reset_button)
 
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                              Timing Sequence
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
 timer.start(1000)

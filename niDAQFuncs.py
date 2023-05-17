@@ -30,22 +30,36 @@ except Exception as e:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #          Load tasks created in MAX (Measurement & Automation Explroer)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Load thermocouple task1
 try:
     system = nidaqmx.system.System.local()
     # Determine the name of the created dask by indexing through tasks
     #print(system.tasks.task_names[0])
     # Create a persisted task - Loads the existing task from memory
     ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[0])
+    ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[1])
+except Exception as e:
+    print("Unable to load task from NI-MAX")
+try:
     # load the persisted task into a python task object
     tc_task1 = ptask1.load() # this task can now be used as others shown above
 except Exception as e:
     print("Unable to load task from NI-MAX")
+    tc_task1 = None
+
+try:
+    # load the persisted task into a python task object
+    tc_task2 = ptask2.load() # this task can now be used as others shown above
+except Exception as e:
+    print("Unable to load task from NI-MAX")
+    tc_task2 = None
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                          Configure NI-DAQ Modules
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def config_daq(tc_slot1=1, tc_slot2=2, ci_slot=2, fs=5):
+def config_daq(fs=5):
      
     global tc_task1
+    global tc_task2
     global ci_task1
     global ci_task2
     global ci_task3
@@ -68,6 +82,10 @@ def config_daq(tc_slot1=1, tc_slot2=2, ci_slot=2, fs=5):
     # Configure NI-9411 digital input channel for pulse counting
 
     try:
+        if tc_task1 and tc_task2 is not None:
+            ci_slot=3
+        else:
+            ci_slot=2
         # Channel Names 
         ci_chan1 = system.devices[ci_slot].ci_physical_chans[0].name # Pin1 = ctr0
         ci_chan2 = system.devices[ci_slot].ci_physical_chans[2].name # Pin3 = ctr2
@@ -115,7 +133,7 @@ def init_daq(sample_rate=0.2):
     global ci_task4
     
     try:
-        config_daq(ci_slot=2)
+        config_daq()
         ci_task1.start()
         ci_task2.start()
         ci_task3.start()
@@ -131,6 +149,7 @@ def init_daq(sample_rate=0.2):
 def read_daq():
     
     global tc_task1
+    global tc_task2
     global ci_task1
     global ci_task2
     global ci_task3
@@ -138,11 +157,25 @@ def read_daq():
     # Read in thermocouple data from NI-9214 Module
     # Read in pulse data from NI-9411 Module
     try:
-        data = tc_task1.read()
-        data.insert(0, ci_task1.ci_channels[0].ci_count)
-        data.insert(1, ci_task2.ci_channels[0].ci_count)
-        data.insert(2, ci_task3.ci_channels[0].ci_count)
-        data.insert(3, ci_task4.ci_channels[0].ci_count)
+        if tc_task1 and tc_task2 is not None:
+            data = tc_task1.read()
+            data = data + tc_task2.read()
+            data.insert(0, ci_task1.ci_channels[0].ci_count)
+            data.insert(1, ci_task2.ci_channels[0].ci_count)
+            data.insert(2, ci_task3.ci_channels[0].ci_count)
+            data.insert(3, ci_task4.ci_channels[0].ci_count)
+        elif tc_task1 is not None:
+            data = tc_task1.read()
+            data.insert(0, ci_task1.ci_channels[0].ci_count)
+            data.insert(1, ci_task2.ci_channels[0].ci_count)
+            data.insert(2, ci_task3.ci_channels[0].ci_count)
+            data.insert(3, ci_task4.ci_channels[0].ci_count)
+        else:
+            data = tc_task2.read()
+            data.insert(0, ci_task1.ci_channels[0].ci_count)
+            data.insert(1, ci_task2.ci_channels[0].ci_count)
+            data.insert(2, ci_task3.ci_channels[0].ci_count)
+            data.insert(3, ci_task4.ci_channels[0].ci_count)
         #q.put(data)
         return data
     except Exception as e:
@@ -156,21 +189,44 @@ def read_daq():
 def close_daq():
 
     global tc_task1
+    global tc_task2
     global ci_task1
     global ci_task2
     global ci_task3
     global ci_task4
 
     try:
-        tc_task1.close()
-        ci_task1.stop()
-        ci_task1.close()
-        ci_task2.stop()
-        ci_task2.close()
-        ci_task3.stop()
-        ci_task3.close()
-        ci_task4.stop()
-        ci_task4.close()
+        if tc_task1 and tc_task2 is not None:
+            tc_task1.close()
+            tc_task2.close()
+            ci_task1.stop()
+            ci_task1.close()
+            ci_task2.stop()
+            ci_task2.close()
+            ci_task3.stop()
+            ci_task3.close()
+            ci_task4.stop()
+            ci_task4.close()
+        elif tc_task1 is not None:
+            tc_task1.close()
+            ci_task1.stop()
+            ci_task1.close()
+            ci_task2.stop()
+            ci_task2.close()
+            ci_task3.stop()
+            ci_task3.close()
+            ci_task4.stop()
+            ci_task4.close()
+        else:
+            tc_task2.close()
+            ci_task1.stop()
+            ci_task1.close()
+            ci_task2.stop()
+            ci_task2.close()
+            ci_task3.stop()
+            ci_task3.close()
+            ci_task4.stop()
+            ci_task4.close()
     except Exception as e:
         print(e)
         return "No tasks to close."
