@@ -1,9 +1,10 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                  IMPORTS/Libraries used for program and UI 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import sys
 import os
 import csv
+import file_utils as fu
 import pandas as pd
 import numpy as np
 import time
@@ -45,20 +46,23 @@ ni.init_daq()
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define relevant functions prior to their call
+data_ = None
 d = []
 last_data = [0, 0, 0, 0]
 pulse_d = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
-def get_data():
+def get_data(pcfs=[1, .05, 1, 1]):
     global last_data
     global pulse_d
     global pulse_reset
+    global data_
     tod = datetime.now().strftime("%H:%M:%S")
     test_time = round((time.time()-t_zero)/60, 2)
     # Try to read in data from ni hardware; otherwise return list of 0's
     try:
         data_ = list(np.around(np.array(ni.read_daq()),1))
-        data = list(np.array(data_[:4])-np.array(last_data)) + ["open" if x > 4000 else x for x in data_[4:]]
+        data = list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
+        ["open" if x > 4000 else x for x in data_[4:]]
         data.insert(0, tod)
         data.insert(1, test_time)
         d.append(data)
@@ -132,7 +136,7 @@ def start_test():
     pulse_reset = pulse_d
     status.append("testing in progress...")
     status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
-        color: {}; font-weight: bold;".format(font_color1))
+        color: #ffffff; font-weight: bold;")
     status_indicator.setText("Recording")
 
 #~~~~~~~~~ Slot function for handling stop button click event ~~~~~~~~~~~~~~~~~
@@ -144,7 +148,7 @@ def stop_test():
     status.append("testing concluded.")
     update_system_status(status[-1])
     status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
-        color: {}; font-weight: bold;".format(font_color1))
+        color: #ffffff; font-weight: bold;")
     status_indicator.setText("Not Recording")
 
 #~~~~~~~~~ Slot function for handling reset button click event ~~~~~~~~~~~~~~~~
@@ -184,6 +188,7 @@ def show_data_window():
     data_window.setStyleSheet("background-color: #0f0f0f;")
     
     layout = QVBoxLayout()
+    layout.setSpacing(0)
     # Add a labels to the window
     label1 = QLabel("Temperatures (F):", data_window)
     label1.setStyleSheet("color: #ffffff; font: 12px; font-weight: bold; \
@@ -209,38 +214,38 @@ def show_data_window():
     
     # Temp Average
     temp_avg_layout1 = QHBoxLayout()
-    label_1a = QLabel("Average of Temps")
-    label_1a.setStyleSheet("color: #ffffff; font: 12px;")
+    label_1a = QLabel(" Average of Temps  ")
+    label_1a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout1.addWidget(label_1a)
     temp_avg_value_1a = QLineEdit()
-    temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout1.addWidget(temp_avg_value_1a)
-    label_1b = QLabel("to")
-    label_1b.setStyleSheet("color: #ffffff; font: 12px;")
+    label_1b = QLabel(" to ")
+    label_1b.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout1.addWidget(label_1b)
     temp_avg_value_1b = QLineEdit()
-    temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout1.addWidget(temp_avg_value_1b)
-    temp_avg_value_1c = QLabel("= NA")
-    temp_avg_value_1c.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_1c = QLabel(" = NA")
+    temp_avg_value_1c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
     temp_avg_layout1.addWidget(temp_avg_value_1c)
     
 
     temp_avg_layout2 = QHBoxLayout()
-    label_2a = QLabel("Average of Temps")
-    label_2a.setStyleSheet("color: #ffffff; font: 12px;")
+    label_2a = QLabel(" Average of Temps  ")
+    label_2a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout2.addWidget(label_2a)
     temp_avg_value_2a = QLineEdit()
-    temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout2.addWidget(temp_avg_value_2a)
-    label_2b = QLabel("to")
-    label_2b.setStyleSheet("color: #ffffff; font: 12px;")
+    label_2b = QLabel(" to ")
+    label_2b.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout2.addWidget(label_2b)
     temp_avg_value_2b = QLineEdit()
-    temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout2.addWidget(temp_avg_value_2b)
-    temp_avg_value_2c = QLabel("= NA")
-    temp_avg_value_2c.setStyleSheet("color: #ffffff; font: 12px;")
+    temp_avg_value_2c = QLabel(" = NA")
+    temp_avg_value_2c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
     temp_avg_layout2.addWidget(temp_avg_value_2c)
 
     # Add table for pulse data
@@ -293,9 +298,47 @@ def show_graph_window():
     # Create a window for graph configuration
     graph_menu.exec()
 
+#~~~~~~~~~~~~~~~~~~~~~~~~ Display Graph Setup Window  ~~~~~~~~~~~~~~~~~~~~~~~~~
+graph_window = None
+def set_graph_window():
+    global graph_window
+
+    graph_window = QWidget()
+    graph_window.setWindowTitle("Setup Graph")
+    graph_window.setGeometry(120, 150, 200, 200)
+    graph_window.setStyleSheet("background-color: #0f0f0f;")
+    
+    layout = QVBoxLayout()
+    layout.setSpacing(0)
+
+    label1 = QLabel("Set Y Lower Bound")
+    label1.setStyleSheet("color: #ffffff; font: 14px;")
+    entry1 = QLineEdit()
+    entry1.setStyleSheet("color: #ffffff; font: 14px;")
+    label2 = QLabel("Set Y Upper Bound")
+    label2.setStyleSheet("color: #ffffff; font: 14px;")
+    entry2 = QLineEdit()
+    entry2.setStyleSheet("color: #ffffff; font: 14px;")
+    button_style =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+                "QPushButton:hover {background-color: #555555;}" \
+                "QPushButton:pressed {background-color: #777777;}"
+    set_button = QPushButton("Set Range")
+    set_button.setStyleSheet(button_style)
+    auto_button = QPushButton("Autoscale")
+    auto_button.setStyleSheet(button_style)
+
+    layout.addWidget(label1)
+    layout.addWidget(entry1)
+    layout.addWidget(label2)
+    layout.addWidget(entry2)
+    layout.addWidget(set_button)
+    layout.addWidget(auto_button)
+
+    graph_window.setLayout(layout)
+    graph_window.show()
 #~~~~~~~~~~~~~~~~~~~~~ Update Function for Data Window ~~~~~~~~~~~~~~~~~~~~~~~~
 def update_data_window():
-
+    global data_
     if tc_model is not None:
         # Update the values in the table 
         for row in range(8):
@@ -307,18 +350,20 @@ def update_data_window():
         try:
             t1a = int(temp_avg_value_1a.text())
             t1b = int(temp_avg_value_1b.text())
-            list1 = np.array(d[-1][t1a+5:t1b+5])
-            temp_avg_value_1c.setText("= {}".format(np.mean(list1)))
+            t1_l = data_[t1a+3:t1b+3]
+            tavg1 = np.mean(np.array([value for value in t1_l if value < 4000]))
+            temp_avg_value_1c.setText(" = {}".format(round(tavg1, 1)))
         except Exception as e:
-            temp_avg_value_1c.setText("= NA")
+            temp_avg_value_1c.setText(" = NA")
 
         try:
             t2a = int(temp_avg_value_2a.text())
             t2b = int(temp_avg_value_2b.text())
-            list2 = np.array(d[-1][t1a+5:t1b+5])
-            temp_avg_value_2c.setText("= {}".format(np.mean(list2)))
+            t2_l = data_[t2a+3:t2b+3]
+            tavg2 = np.mean(np.array([value for value in t2_l if value < 4000]))
+            temp_avg_value_2c.setText(" = {}".format(round(tavg2, 1)))
         except Exception as e:
-            temp_avg_value_1c.setText("= NA")
+            temp_avg_value_2c.setText(" = NA")
     if pulse_model is not None:
         # Update the values in pulse table
         for i in range(4):
@@ -327,41 +372,7 @@ def update_data_window():
             pulse_model.item(2, i).setText("Total: {}".format(pulse_d[i]))
            
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~ CSV File Setup Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def file_setup():
-    global file_name
-        
-    if testing:
-        pass
-    else:
-        # Create unique data file
-        os.chdir(current_directory + "/Data")
-        file_date = date.today().strftime("%m-%d-%y")
-        headers = ["Time of Day", "Test Time", "Counter 1","Counter 2","Counter 3","Counter 4",]
-        for i in range(1, 17):
-            headers.append("Temp {}".format(i))
-            
-        for i in range(50):
-            if not os.path.isfile(os.getcwd() +'/'+ file_date +'_'+ str(i) + ".csv"):
-                file_name = file_date + '_' + str(i) + ".csv"
-                print("Adding new file: {}\n".format(file_name))
-                status.append("Adding new file: {}".format(file_name))
-                break
-            elif i==49:
-                print("Maximum files achieved for the day. Please remove some and try again.")
-        with open(file_name, 'a') as file_data:
-            csvWriter = csv.writer(file_data, delimiter=',')
-            csvWriter.writerow([file_date])
             csvWriter.writerow(headers)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def write_data(file_name, data):
-    global testing
-    if testing:
-        with open(file_name, 'a', newline='') as file_data:
-            csvWriter = csv.writer(file_data, delimiter=',')
-            csvWriter.writerow(data)
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                             Setup Main UI 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -369,7 +380,7 @@ def write_data(file_name, data):
 app = QApplication(sys.argv)
 
 # Set the window icon
-app.setWindowIcon(QIcon("tz-icon.png")) 
+app.setWindowIcon(QIcon("photos/tz-icon.png")) 
 
 # Create the main window for the application
 main_window = QMainWindow()
@@ -396,7 +407,7 @@ main_layout.addWidget(header_widget)
 
 # Subsection 1: Logo
 main_logo = QLabel()
-main_logo.setPixmap(QPixmap("fstc_logo2.png"))
+main_logo.setPixmap(QPixmap("photos/fstc_logo2.png"))
 header_layout.addWidget(main_logo)
 
 # Subsection 2: Test Time
@@ -404,7 +415,7 @@ time_layout = QVBoxLayout()
 time_label = QLabel("TEST TIME:")
 time_label.setStyleSheet("color: #ffffff; font: 30px; font-weight: bold; \
             font-family:{};".format(font_style))
-time_label.setPixmap(QPixmap("test_time1.png"))
+time_label.setPixmap(QPixmap("photos/test_time1.png"))
 time_label.setAlignment(Qt.AlignCenter)
 time_layout.addWidget(time_label)
 time_label_value = QLabel("0.0")
@@ -419,7 +430,7 @@ status_layout = QVBoxLayout()
 status_label = QLabel("Status:")
 status_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
             font-family:{};".format(font_style))
-status_label.setPixmap(QPixmap("status1.png"))
+status_label.setPixmap(QPixmap("photos/status1.png"))
 status_label.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(status_label)
 status_indicator = QLabel("Not Recording")
@@ -429,7 +440,7 @@ status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
 status_indicator.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(status_indicator)
 ambient_label = QLabel("Ambient:")
-ambient_label.setPixmap(QPixmap("ambient1.png"))
+ambient_label.setPixmap(QPixmap("photos/ambient1.png"))
 ambient_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
             font-family:{};".format(font_style))
 ambient_label.setAlignment(Qt.AlignCenter)
@@ -468,8 +479,12 @@ exit_action.triggered.connect(main_window.close)
 file_menu.addAction(exit_action)
 # Add an action for new test file
 new_test_action = QAction("New Test", main_window)
-new_test_action.triggered.connect(file_setup)
+new_test_action.triggered.connect(fu.file_setup)
 file_menu.addAction(new_test_action)
+# Add an action for copying test file
+copy_file_action = QAction("Create File Copy", main_window)
+copy_file_action.triggered.connect(fu.copy_file)
+file_menu.addAction(copy_file_action)
 
 # Add a Setup menu
 setup_menu = menubar.addMenu("Setup")
@@ -505,6 +520,9 @@ graph_menu.addAction(graph_menu_action)
 for i in range(8):
     graph_menu.addAction(tc_items[i])
 
+set_graph_action = QAction("Set Graph Range")
+set_graph_action.triggered.connect(set_graph_window)
+graph_menu.addAction(set_graph_action)
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
 
@@ -544,9 +562,13 @@ def update_elapsed_time():
         ambient_label_value.setText("{}".format(d[-1][6]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
-    else:
+    elif d[-1][6] >=80:
         ambient_label_value.setText("{}".format(d[-1][6]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
+            font-family:{};".format(font_style))
+    else:
+        ambient_label_value.setText("{}".format(d[-1][6]))
+        ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
         
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -608,7 +630,7 @@ timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_elapsed_time)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-timer.timeout.connect(lambda: write_data(file_name, d[-1]))
+timer.timeout.connect(lambda: fu.write_data(d[-1], testing))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         Main Program Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -619,13 +641,11 @@ if __name__ == "__main__":
         main_window.show()
 
         # Create Data directory if it does not exist
-        current_directory = os.getcwd()
-        if not os.path.exists(current_directory + "/Data"):
-            os.mkdir(current_directory + "/Data")
-            print("New Data directory added...\n")
-        
+        fu.create_directory()
+       
         # Create new CSV Test File
-        file_setup()   
+        fu.file_setup(testing)
+        status.append("Adding new file: {}".format(fu.file_name))
 
         sys.exit(app.exec())
     except Exception as e:
