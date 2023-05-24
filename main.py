@@ -17,7 +17,7 @@ from PySide6.QtGui import (QIcon, QAction, QStandardItemModel, QStandardItem,
         QFont, QPixmap)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
         QHBoxLayout, QPushButton, QListWidget, QGridLayout, QLabel, QLineEdit, 
-        QStatusBar, QFrame, QTableView, QDialog, QMenu)
+        QStatusBar, QFrame, QTableView, QDialog, QMenu, QSpacerItem, QSizePolicy)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            START OF PROGRAM
@@ -25,6 +25,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 # Status Updates from System
 status = []
 testing = False # Test Status
+current_index = 0
+time_index = 0
 # Simulated Data File 
 file_name = "scratch_data_0.csv"
 # Color Palette
@@ -89,11 +91,11 @@ def update_plot():
     if len(d) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+5], label=str(item), lw=0.5)
+            ax.plot(df[item+6], label=str(item), lw=1.5)
     elif len(d) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+5][-3600:-1])
+            ax.plot(df[item+6][-3600:-1], label=str(item), lw=0.5)
     # Graph tc channel 1 if none selected
     else:
         if len(df) < 3600:
@@ -119,6 +121,7 @@ def update_system_status(status):
      
     system_status_label.setText(status)
 
+   
 #~~~~~~~~~ Slot function for handling start button click event ~~~~~~~~~~~~~~~~
 def start_test():
     global testing
@@ -171,6 +174,7 @@ temp_avg_value_1c = None
 temp_avg_value_2a = None
 temp_avg_value_2b = None
 temp_avg_value_2c = None
+index_label = None
 def show_data_window():
     global data_window
     global tc_model
@@ -181,6 +185,7 @@ def show_data_window():
     global temp_avg_value_2a
     global temp_avg_value_2b
     global temp_avg_value_2c
+    global index_label
     # Create a window for data view
     data_window = QWidget()
     data_window.setWindowTitle("Data")
@@ -191,18 +196,23 @@ def show_data_window():
     layout.setSpacing(0)
     # Add a labels to the window
     label1 = QLabel("Temperatures (F):", data_window)
-    label1.setStyleSheet("color: #ffffff; font: 12px; font-weight: bold; \
+    label1.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
             font-family:{}; text-decoration: underline;".format(font_style))
     
     label2 = QLabel("Energy & Water:", data_window)
-    label2.setStyleSheet("color: #ffffff; font: 12px; font-weight: bold; \
+    label2.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
             font-family:{}; text-decoration: underline;".format(font_style))
+
+    label3 = QLabel("Analysis:", data_window)
+    label3.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
+            font-family:{}; text-decoration: underline;".format(font_style))
+
     
-    # Add Table for Thermocouple data
+#~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     tc_model = QStandardItemModel(8, 2)
     for row in range(8):
         for column in range(2):
-            index = (row+1)+(column*8)
+            index = (row)+(column*8)
             item = QStandardItem("Temp {}: NA".format(index))
             tc_model.setItem(row, column, item)
     table_view1 = QTableView()
@@ -248,7 +258,7 @@ def show_data_window():
     temp_avg_value_2c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
     temp_avg_layout2.addWidget(temp_avg_value_2c)
 
-    # Add table for pulse data
+#~~~~~~ Section 2: Pulse and Other Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
     pulse_model = QStandardItemModel(3, 4)
     item1 = QStandardItem("Electric Energy:")
     item2 = QStandardItem("Interval: NA")
@@ -282,13 +292,26 @@ def show_data_window():
     table_view2.setModel(pulse_model)
     table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
                           "border-style: solid; border-width: 0 1px 1px 1px;")
+
+#~~~~~ Section 3: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    index_label = QLabel("Current Index = NA", data_window) 
+    index_label.setStyleSheet("color: #ffffff; font: 14px; font-family:{};".format(font_style))
+
+    # Add spacers for layout styling
+    spacer_item = QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Fixed)
     # Organize structure of layout 
     layout.addWidget(label1)
+    layout.addItem(spacer_item)
     layout.addWidget(table_view1)
+    layout.addItem(spacer_item)
     layout.addLayout(temp_avg_layout1)
     layout.addLayout(temp_avg_layout2)
+    layout.addItem(spacer_item)
     layout.addWidget(label2)
+    layout.addItem(spacer_item)
     layout.addWidget(table_view2)
+    layout.addWidget(label3)
+    layout.addWidget(index_label)
 
     data_window.setLayout(layout)
     data_window.show()
@@ -343,14 +366,14 @@ def update_data_window():
         # Update the values in the table 
         for row in range(8):
             for column in range(2):
-                index = (row+1)+(column*8)
-                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+5]))
+                index = (row)+(column*8)
+                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+6]))
     
     if temp_avg_value_1a is not None:
         try:
             t1a = int(temp_avg_value_1a.text())
             t1b = int(temp_avg_value_1b.text())
-            t1_l = data_[t1a+3:t1b+3]
+            t1_l = data_[t1a+4:t1b+5]
             tavg1 = np.mean(np.array([value for value in t1_l if value < 4000]))
             temp_avg_value_1c.setText(" = {}".format(round(tavg1, 1)))
         except Exception as e:
@@ -359,20 +382,22 @@ def update_data_window():
         try:
             t2a = int(temp_avg_value_2a.text())
             t2b = int(temp_avg_value_2b.text())
-            t2_l = data_[t2a+3:t2b+3]
+            t2_l = data_[t2a+4:t2b+5]
             tavg2 = np.mean(np.array([value for value in t2_l if value < 4000]))
             temp_avg_value_2c.setText(" = {}".format(round(tavg2, 1)))
         except Exception as e:
             temp_avg_value_2c.setText(" = NA")
+
     if pulse_model is not None:
         # Update the values in pulse table
         for i in range(4):
             pulse_model.item(1, i).setText("Interval: {}".format(d[-1][i+2]))
         for i in range(4):
             pulse_model.item(2, i).setText("Total: {}".format(pulse_d[i]))
-           
 
-            csvWriter.writerow(headers)
+    if index_label is not None:
+        index_label.setText("Current Index = {}".format(current_index))
+           
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                             Setup Main UI 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -405,12 +430,12 @@ header_widget.setMaximumHeight(135)
 header_layout = QHBoxLayout(header_widget)
 main_layout.addWidget(header_widget)
 
-# Subsection 1: Logo
+# Header Subsection 1: Logo
 main_logo = QLabel()
 main_logo.setPixmap(QPixmap("photos/fstc_logo2.png"))
 header_layout.addWidget(main_logo)
 
-# Subsection 2: Test Time
+# Header Subsection 2: Test Time
 time_layout = QVBoxLayout()
 time_label = QLabel("TEST TIME:")
 time_label.setStyleSheet("color: #ffffff; font: 30px; font-weight: bold; \
@@ -423,9 +448,11 @@ time_label_value.setStyleSheet("color: #ffffff; font: 30px; font-weight:bold;\
             font-family:{};".format(font_style)) #  
 time_label_value.setAlignment(Qt.AlignCenter)
 time_layout.addWidget(time_label_value)
+spacer_item = QSpacerItem(10, 60, QSizePolicy.Expanding, QSizePolicy.Fixed)
+time_layout.addItem(spacer_item)
 header_layout.addLayout(time_layout)
 
-# Subsection 3: Status and Ambient Temp
+# Header Subsection 3: Status and Ambient Temp
 status_layout = QVBoxLayout()
 status_label = QLabel("Status:")
 status_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
@@ -505,7 +532,7 @@ data_menu.addAction(view_data_action)
 graph_menu = QMenu("Graph", menubar)
 tc_items = []
 for i in range(8):
-    item = QAction("Temp {}".format(i+1), graph_menu, checkable=True)
+    item = QAction("Temp {}".format(i), graph_menu, checkable=True)
     tc_items.append(item)
 menubar.addMenu(graph_menu)
 
@@ -523,8 +550,16 @@ for i in range(8):
 set_graph_action = QAction("Set Graph Range")
 set_graph_action.triggered.connect(set_graph_window)
 graph_menu.addAction(set_graph_action)
+
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
+setup_config_action = QAction("Setup Config", main_window)
+#setup_config_action.triggered.connect(show_config_window)
+load_config_action = QAction("Load Config", main_window)
+#load_config_action.triggered.connect()
+config_menu.addAction(setup_config_action)
+config_menu.addAction(load_config_action)
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -550,14 +585,17 @@ status_bar.addPermanentWidget(status_bar_label)
 
 # Function for updating the elapsed time label
 
-def update_elapsed_time():
-# Calculate the elapsed time since the program started
+def update_values():
+#~~~~~ Update Elapsed Time ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Calculate the elapsed time since the program started
     time_difference = start_time.secsTo(QTime.currentTime())
     elapsed_time = QTime(0, 0, 0).addSecs(time_difference).toString("hh:mm:ss")
     test_time = round((time.time()-t_zero)/60, 2)
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
     
+#~~~~ Update Time Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     time_label_value.setText("{}".format(test_time))
+#~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if d[-1][6] >=70 and d[-1][6] <80:
         ambient_label_value.setText("{}".format(d[-1][6]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
@@ -570,6 +608,9 @@ def update_elapsed_time():
         ambient_label_value.setText("{}".format(d[-1][6]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
+    
+    global current_index
+    current_index += 1
         
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Push Buttons
@@ -628,7 +669,7 @@ timer.start(1000)
 timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
-timer.timeout.connect(update_elapsed_time)
+timer.timeout.connect(update_values)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
 timer.timeout.connect(lambda: fu.write_data(d[-1], testing))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -647,10 +688,12 @@ if __name__ == "__main__":
         fu.file_setup(testing)
         status.append("Adding new file: {}".format(fu.file_name))
 
-        sys.exit(app.exec())
+        app.exec()
     except Exception as e:
         print(e)
 
     finally:
         ni.close_daq()
+
+    sys.exit()
 
