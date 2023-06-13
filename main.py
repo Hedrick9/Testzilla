@@ -16,7 +16,7 @@ from PySide6.QtCore import QTime, QTimer, QSize, Qt
 from PySide6.QtGui import (QIcon, QAction, QStandardItemModel, QStandardItem, 
         QFont, QPixmap)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-        QHBoxLayout, QPushButton, QListWidget, QGridLayout, QLabel, QLineEdit, 
+        QHBoxLayout, QPushButton, QListWidget, QLabel, QLineEdit, QComboBox,
         QStatusBar, QFrame, QTableView, QDialog, QMenu, QSpacerItem, QSizePolicy)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,10 +27,11 @@ status = []
 testing = False # Test Status
 current_index = 0
 time_index = 0
+time_interval = 1 # seconds
 # Simulated Data File 
 file_name = "scratch_data_0.csv"
 # Color Palette
-primary_color = "#000000" #"#0f0f0f" # "#f0a2fc" 
+primary_color = "#000000" # "#f0a2fc" 
 secondary_color = "#2b2b2a"
 tri_color = "#121212"  #"#facffa"
 font_color1 = "#ffffff"
@@ -41,27 +42,35 @@ print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#daq_thread = threading.Thread(target=ni.init_daq, args=(1, True,))
-#daq_thread.start()
 ni.init_daq()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define relevant functions prior to their call
+def get_time():
+    global time_index
+    global time_interval
+    if time_index < time_interval: time_index += 1
+    if time_index == time_interval: time_index = 0
+
 data_ = None
 d = []
 last_data = [0, 0, 0, 0]
 pulse_d = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
 def get_data(pcfs=[1, .05, 1, 1]):
+    global time_index
+    global time_interval
     global last_data
     global pulse_d
     global pulse_reset
     global data_
+    get_time()
     tod = datetime.now().strftime("%H:%M:%S")
     test_time = round((time.time()-t_zero)/60, 2)
     # Try to read in data from ni hardware; otherwise return list of 0's
-    try:
+    data_ = ni.read_daq()
+    if data_ is not None:
         data_ = list(np.around(np.array(ni.read_daq()),1))
         data = list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
         ["open" if x > 4000 else x for x in data_[4:]]
@@ -70,13 +79,12 @@ def get_data(pcfs=[1, .05, 1, 1]):
         d.append(data)
         pulse_d = list(np.array(data_[:4])-np.array(pulse_reset))
         last_data = data_[:4]
-    except Exception as e:
-        print(e)
+    else:
         status.append("error reading from ni-DAQ")
-        data = list(np.zeros(20))
-        data.insert(0, tod)
-        data.insert(1, test_time)
-        d.append(data)
+        data_ = list(np.zeros(20))
+        data_.insert(0, tod)
+        data_.insert(1, test_time)
+        d.append(data_)
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
     # Update the plot with new data
@@ -91,7 +99,7 @@ def update_plot():
     if len(d) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+6], label=str(item), lw=1.5)
+            ax.plot(df[item+6], label=str(item), lw=0.5)
     elif len(d) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
@@ -131,8 +139,10 @@ def start_test():
     global pulse_d
     global pulse_reset
     global status_indicator
+    global time_index 
     start_time = QTime.currentTime()
     t_zero = time.time()
+    time_index = 0
     testing = True
     d = []
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
@@ -160,9 +170,12 @@ def reset_():
     global pulse_d
     global pulse_reset
     global t_zero
+    global time_index
     start_time = QTime.currentTime()
     t_zero = time.time()
+    time_index = 0
     pulse_reset = pulse_d
+    timer.start(1000)
 
 #~~~~~~~~~~~~~~~~~ Function for Initial Data Window Display ~~~~~~~~~~~~~~~~~~~
 data_window = None
@@ -359,6 +372,41 @@ def set_graph_window():
 
     graph_window.setLayout(layout)
     graph_window.show()
+#~~~~~~~~~~~~~~~~~~~~~~~~ Display Config Setup Window  ~~~~~~~~~~~~~~~~~~~~~~~~
+def handle_time_selection(index):
+    global time_interval
+    selected_option = index
+    time_dict = {0: 1, 1: 5, 2: 30, 3: 60}
+    time_interval = time_dict[index]
+
+config_window = None
+def set_config_window():
+    global config_window
+
+    config_window = QWidget()
+    config_window.setWindowTitle("Test Configuration Setup")
+    config_window.setGeometry(200, 200, 300, 500)
+    config_window.setStyleSheet("background-color: #0f0f0f;")
+    
+    layout = QVBoxLayout()
+    layout.setSpacing(0)
+
+    label1 = QLabel("Set Test Time Interval:")
+    label1.setStyleSheet("color: #ffffff; font: 14px;")
+    time_selection = QComboBox()
+    time_selection.setStyleSheet("color: #ffffff; font: 14px;")
+    time_selection.addItem("1 second")
+    time_selection.addItem("5 seconds")
+    time_selection.addItem("30 seconds")
+    time_selection.addItem("1 minute")
+    time_selection.currentIndexChanged.connect(handle_time_selection)
+    layout.addWidget(label1)
+    layout.addWidget(time_selection)
+
+    config_window.setLayout(layout)
+    config_window.show()
+
+
 #~~~~~~~~~~~~~~~~~~~~~ Update Function for Data Window ~~~~~~~~~~~~~~~~~~~~~~~~
 def update_data_window():
     global data_
@@ -554,7 +602,7 @@ graph_menu.addAction(set_graph_action)
 # Add a Configuration menu
 config_menu = menubar.addMenu("Config")
 setup_config_action = QAction("Setup Config", main_window)
-#setup_config_action.triggered.connect(show_config_window)
+setup_config_action.triggered.connect(set_config_window)
 load_config_action = QAction("Load Config", main_window)
 #load_config_action.triggered.connect()
 config_menu.addAction(setup_config_action)
@@ -660,18 +708,30 @@ main_layout.addWidget(start_button)
 main_layout.addWidget(stop_button)
 main_layout.addWidget(reset_button)
 
+pt_start = time.time()
+def process_time_start():
+    global pt_start
+    pt_start = time.time()
+
+def process_time():
+    global pt_start
+    process_time = time.time() - pt_start
+    print(process_time)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                              Timing Sequence
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
 timer.start(1000)
+timer.timeout.connect(process_time_start)
 timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_values)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-timer.timeout.connect(lambda: fu.write_data(d[-1], testing))
+timer.timeout.connect(lambda: fu.write_data(d[-1], testing, time_index))
+timer.timeout.connect(process_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         Main Program Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

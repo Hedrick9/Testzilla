@@ -39,19 +39,19 @@ try:
     ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[0])
     ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[1])
 except Exception as e:
-    print("Unable to load task from NI-MAX")
+    print("Unable to load task from NI-MAX: PERROR")
 try:
     # load the persisted task into a python task object
     tc_task1 = ptask1.load() # this task can now be used as others shown above
 except Exception as e:
-    print("Unable to load task from NI-MAX")
+    print("Unable to load tc_task1 from NI-MAX")
     tc_task1 = None
 
 try:
     # load the persisted task into a python task object
     tc_task2 = ptask2.load() # this task can now be used as others shown above
 except Exception as e:
-    print("Unable to load task from NI-MAX")
+    print("Unable to load tc_task2 from NI-MAX")
     tc_task2 = None
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                          Configure NI-DAQ Modules
@@ -140,8 +140,7 @@ def init_daq(sample_rate=0.2):
         ci_task4.start()
     
     except Exception as e:
-        print(e)
-        return "Unable to Initialize NI-DAQ"
+        print("Unable to Initialize NI-DAQ")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Read Data from tasks
@@ -176,11 +175,9 @@ def read_daq():
             data.insert(1, ci_task2.ci_channels[0].ci_count)
             data.insert(2, ci_task3.ci_channels[0].ci_count)
             data.insert(3, ci_task4.ci_channels[0].ci_count)
-        #q.put(data)
         return data
     except Exception as e:
-        print(e)
-        print("Unable to read from NI-DAQ")
+        return None
  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Close all running tasks
