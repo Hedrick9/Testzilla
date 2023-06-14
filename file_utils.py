@@ -68,9 +68,9 @@ def copy_file():
     shutil.copy2(source_file, destination_file)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def write_data(data, testing, times_up):
+def write_data(data, testing):
     global file_name
-    if testing and times_up == 1:
+    if testing:
         with open(file_name, 'a', newline='') as file_data:
             csvWriter = csv.writer(file_data, delimiter=',')
             csvWriter.writerow(data)
