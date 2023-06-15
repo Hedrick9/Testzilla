@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import threading
 import niDAQFuncs as ni
 from PySide6.QtCore import QTime, QTimer, QSize, Qt
@@ -42,8 +42,6 @@ ni.init_daq()
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define relevant functions prior to their call
-t_zero = time.time()
-timing_interval = 1 # seconds
 time_index = 0
 class TestTime:
 
@@ -63,6 +61,15 @@ class TestTime:
         if self.test_time % self.timing_interval == 0:
             self.time_to_write = True
             self.test_time_min = round(self.test_time/60, 2)
+        else:
+            self.time_to_write = False
+
+    def reset(self):
+        self.initial_clock_time = time.time()
+        self.clock_time = 0
+        self.test_time = 0
+        self.test_time_min = 0
+
 
 data_ = None
 d = []
@@ -78,7 +85,6 @@ def get_data(pcfs=[1, .05, 1, 1]):
     global pulse_reset
     global data_
     tod = datetime.now().strftime("%H:%M:%S")
-    # test_time = round((time.time()-t_zero)/60, 2)
     # Try to read in data from ni hardware; otherwise return list of 0's
     data_ = ni.read_daq()
     if data_ is not None:
@@ -144,7 +150,6 @@ def update_system_status(status):
 def start_test():
     global testing
     global start_time
-    global t_zero
     global d
     global pulse_d
     global pulse_reset
@@ -159,7 +164,7 @@ def start_test():
         color: #ffffff; font-weight: bold;")
     status_indicator.setText("Recording")
     start_time = QTime.currentTime()
-    t_zero = time.time()
+    test_time.reset()
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
 
 #~~~~~~~~~ Slot function for handling stop button click event ~~~~~~~~~~~~~~~~~
@@ -179,12 +184,11 @@ def reset_():
     global start_time
     global pulse_d
     global pulse_reset
-    global t_zero
     global time_index
     time_index = 0
     pulse_reset = pulse_d
     start_time = QTime.currentTime()
-    t_zero = time.time()
+    test_time.reset()
     timer.start(1000)
 
 #~~~~~~~~~~~~~~~~~ Function for Initial Data Window Display ~~~~~~~~~~~~~~~~~~~
@@ -384,10 +388,9 @@ def set_graph_window():
     graph_window.show()
 #~~~~~~~~~~~~~~~~~~~~~~~~ Display Config Setup Window  ~~~~~~~~~~~~~~~~~~~~~~~~
 def handle_time_selection(index):
-    global timing_interval
     selected_option = index
     time_dict = {0: 1, 1: 5, 2: 30, 3: 60}
-    timing_interval = time_dict[index]
+    test_time.timing_interval = time_dict[index]
 
 config_window = None
 def set_config_window():
@@ -738,15 +741,15 @@ test_time = TestTime(1) #initialize timing sequence
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
 timer.start(1000)
-timer.timeout.connect(process_time)
-timer.timeout.connect(process_time_start)
+# timer.timeout.connect(process_time)
+# timer.timeout.connect(process_time_start)
 timer.timeout.connect(test_time.update_time)
 timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_values)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-timer.timeout.connect(lambda: fu.write_data(d[-1], testing))
+timer.timeout.connect(lambda: fu.write_data(d[-1], testing, test_time.time_to_write))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         Main Program Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
