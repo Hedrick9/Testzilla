@@ -45,27 +45,24 @@ ni.init_daq()
 t_zero = time.time()
 timing_interval = 1 # seconds
 time_index = 0
-def test_timef():
-    global time_index
-    global timing_interval
-    if time_index < timing_interval: time_index += 1
-    if time_index == timing_interval: time_index = 0
-
 class TestTime:
 
     def __init__(self, timing_interval=1):
         self.initial_clock_time = time.time()
-        self.test_time = 0 
+        self.clock_time = 0
+        self.test_time = 0
+        self.test_time_min = 0
         self.timing_interval = timing_interval # sample every n seconds
+        self.time_to_write = False
 
-    def update_time():
-        self.test_time += 1 
-        self.test_time_clock = time.time() - self.initial_clock_time
-
-    def get_time():
-        test_time_min = round(self.test_time/60, 2)
-        return test_time_min
-
+    def update_time(self):
+        self.clock_time = time.time() - self.initial_clock_time
+        self.test_time += 1
+        if self.clock_time - self.test_time > 1:
+            self.test_time += 1
+        if self.test_time % self.timing_interval == 0:
+            self.time_to_write = True
+            self.test_time_min = round(self.test_time/60, 2)
 
 data_ = None
 d = []
@@ -73,15 +70,15 @@ last_data = [0, 0, 0, 0]
 pulse_d = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
 def get_data(pcfs=[1, .05, 1, 1]):
+    # global test_time
     global time_index
     global timing_interval
     global last_data
     global pulse_d
     global pulse_reset
     global data_
-#    test_timef()
     tod = datetime.now().strftime("%H:%M:%S")
-    test_time = round((time.time()-t_zero)/60, 2)
+    # test_time = round((time.time()-t_zero)/60, 2)
     # Try to read in data from ni hardware; otherwise return list of 0's
     data_ = ni.read_daq()
     if data_ is not None:
@@ -89,7 +86,7 @@ def get_data(pcfs=[1, .05, 1, 1]):
         data = list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
         ["open" if x > 4000 else x for x in data_[4:]]
         data.insert(0, tod)
-        data.insert(1, test_time)
+        data.insert(1, test_time.test_time_min)
         d.append(data)
         pulse_d = list(np.array(data_[:4])-np.array(pulse_reset))
         last_data = data_[:4]
@@ -97,7 +94,7 @@ def get_data(pcfs=[1, .05, 1, 1]):
         status.append("error reading from ni-DAQ")
         data_ = list(np.zeros(20))
         data_.insert(0, tod)
-        data_.insert(1, test_time)
+        data_.insert(1, test_time.test_time_min)
         d.append(data_)
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
@@ -649,13 +646,13 @@ status_bar.addPermanentWidget(status_bar_label)
 def update_values():
 #~~~~~ Update Elapsed Time ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Calculate the elapsed time since the program started
+    # global test_time
     time_difference = start_time.secsTo(QTime.currentTime())
     elapsed_time = QTime(0, 0, 0).addSecs(time_difference).toString("hh:mm:ss")
-    test_time = round((time.time()-t_zero)/60, 2)
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
     
 #~~~~ Update Time Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    time_label_value.setText("{}".format(test_time))
+    time_label_value.setText("{}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if d[-1][6] >=70 and d[-1][6] <80:
         ambient_label_value.setText("{}".format(d[-1][6]))
@@ -737,11 +734,13 @@ def process_time():
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                              Timing Sequence
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+test_time = TestTime(1) #initialize timing sequence
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
 timer.start(1000)
 timer.timeout.connect(process_time)
 timer.timeout.connect(process_time_start)
+timer.timeout.connect(test_time.update_time)
 timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
