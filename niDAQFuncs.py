@@ -4,7 +4,7 @@
 # The following program is to read data from the ni-cDAQ-9178 using the nidaqmx lib.
 # Original Author: Russell Hedrick
 # Original Date: 04/28/2023
-# Last Edit: 
+# Last Edit: 06/22/2023
 # Edit Description:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                   Imports 
@@ -15,6 +15,7 @@ import nidaqmx.system
 #                   Create Task for each Device/Module
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a task for each nidaqmx event
+task_list = []
 try:
     system = nidaqmx.system.System.local()
 #    tc_task = nidaqmx.Task() # Thermocouple task
@@ -22,6 +23,10 @@ try:
     ci_task2 = nidaqmx.Task() # Counter task 2 (Gas)
     ci_task3 = nidaqmx.Task() # Counter task 3 (Water)
     ci_task4 = nidaqmx.Task() # Counter task 4 (Extra)
+    task_list.append(ci_task1)
+    task_list.append(ci_task2)
+    task_list.append(ci_task3)
+    task_list.append(ci_task4)
 
 except Exception as e:
     print("Unable to connect to NI-DAQ")
@@ -31,41 +36,48 @@ except Exception as e:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~ Locate and Load Persisted Tasks ~~~~~~~~~~~~~~~~~~~~~~
 try:
-    # Determine the name of the created dask by indexing through tasks
+    # Determine the name of the created task by indexing through tasks
     #print(system.tasks.task_names[0])
     # Create a persisted task - Loads the existing task from memory
     ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[0])
-    tc_task1 = ptask1.load() # this task can now be used as others shown above
+    ai_task = ptask1.load() # this task can now be used as others shown above
+    task_list.append(ai_task)
 except Exception as e:
     print(f"Unable to load task from NI-MAX: {system.tasks.task_names[0]}")
     tc_task1 = None
+    task_list.append(ai_task)
 try:
     # Create a persisted task - Loads the existing task from memory
     ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[1])
-    tc_task2 = ptask2.load() # this task can now be used as others shown above
+    tc_task1 = ptask2.load() # this task can now be used as others shown above
+    task_list.append(tc_task1)
 except Exception as e:
     print(f"Unable to load task from NI-MAX: {system.tasks.task_names[1]}")
-    tc_task2 = None
+    tc_task1 = None
+    task_list.append(tc_task1)
 try:
     # Create a persisted task - Loads the existing task from memory
     ptask3 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[2])
-    tc_task3 = ptask3.load() # this task can now be used as others shown above
+    tc_task2 = ptask3.load() # this task can now be used as others shown above
+    task_list.append(tc_task2)
 except Exception as e:
     print(f"Unable to load task from NI-MAX: {system.tasks.task_names[2]}")
-    ai_task = None
-
+    tc_task2 = None
+    task_list.append(tc_task2)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                          Configure NI-DAQ Modules
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def config_daq(fs=5):
-     
-    global tc_task1
-    global tc_task2
-    global ai_task
-    global ci_task1
-    global ci_task2
-    global ci_task3
-    global ci_task4
+    """
+    Configure specific tasks such as counters. This method is done for all 
+    tasks not created through ni MAX. Configure each counter task for edge
+    counting.
+    task_list[0] = ci_task1
+    task_list[1] = ci_task2
+    task_list[2] = ci_task3
+    task_list[3] = ci_task4
+    """ 
+    global task_list
     
     system = nidaqmx.system.System.local() 
     ## Configure NI-9214 thermocouple module
@@ -84,7 +96,7 @@ def config_daq(fs=5):
     # Configure NI-9411 digital input channel for pulse counting
 
     try:
-        if tc_task1 and tc_task2 is not None:
+        if task_list[4] and task_list[5] is not None: # Check which slot ci module is in 
             ci_slot=3
         else:
             ci_slot=2
@@ -94,26 +106,29 @@ def config_daq(fs=5):
         ci_chan3 = system.devices[ci_slot].ci_physical_chans[1].name # Pin6 = ctr1
         ci_chan4 = system.devices[ci_slot].ci_physical_chans[3].name # Pin8 = ctr3
         
-        # Define a task for each counter and configure each task for edge counting
-        ci_task1.ci_channels.add_ci_count_edges_chan(
+        # configure ci_task1
+        task_list[0].ci_channels.add_ci_count_edges_chan(
                 counter=ci_chan1,
                 name_to_assign_to_channel="",
                 edge=nidaqmx.constants.Edge.RISING,
                 initial_count=0)
        
-        ci_task2.ci_channels.add_ci_count_edges_chan(
+        # configure ci_task2
+        task_list[1].ci_channels.add_ci_count_edges_chan(
                 counter=ci_chan2,
                 name_to_assign_to_channel="",
                 edge=nidaqmx.constants.Edge.RISING,
                 initial_count=0)
         
-        ci_task3.ci_channels.add_ci_count_edges_chan(
+        # configure ci_task3
+        task_list[2].ci_channels.add_ci_count_edges_chan(
                 counter=ci_chan3,
                 name_to_assign_to_channel="",
                 edge=nidaqmx.constants.Edge.RISING,
                 initial_count=0)
         
-        ci_task4.ci_channels.add_ci_count_edges_chan(
+        # configure ci_task4
+        task_list[3].ci_channels.add_ci_count_edges_chan(
                 counter=ci_chan4,
                 name_to_assign_to_channel="",
                 edge=nidaqmx.constants.Edge.RISING,
@@ -126,22 +141,17 @@ def config_daq(fs=5):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                   Main function called by main.py script
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def init_daq(sample_rate=0.2):
-
-    global tc_task1
-    global tc_task2
-    global ci_task1
-    global ci_task2
-    global ci_task3
-    global ci_task4
+def init_daq():
+    """
+    Initialize DAQ and start all counter input tasks
+    """
+    global task_list
     
     try:
         config_daq()
-        ci_task1.start()
-        ci_task2.start()
-        ci_task3.start()
-        ci_task4.start()
-    
+        for i in range(0, 4):
+            if task_list[i] is not None: task_list[i].start()
+   
     except Exception as e:
         print("Unable to Initialize NI-DAQ")
 
@@ -149,84 +159,37 @@ def init_daq(sample_rate=0.2):
 #                           Read Data from tasks
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def read_daq():
-    
-    global tc_task1
-    global tc_task2
-    global ci_task1
-    global ci_task2
-    global ci_task3
-    global ci_task4
-    # Read in thermocouple data from NI-9214 Module
-    # Read in pulse data from NI-9411 Module
+    """
+    - Read in thermocouple data from NI-9214 Module
+    - Read in pulse data from NI-9411 Module
+    - Read in analog voltage data from NI-9215 Module
+    """
     try:
-        if tc_task1 and tc_task2 is not None:
-            data = tc_task1.read()
-            data = data + tc_task2.read()
-            data.insert(0, ci_task1.ci_channels[0].ci_count)
-            data.insert(1, ci_task2.ci_channels[0].ci_count)
-            data.insert(2, ci_task3.ci_channels[0].ci_count)
-            data.insert(3, ci_task4.ci_channels[0].ci_count)
-        elif tc_task1 is not None:
-            data = tc_task1.read()
-            data.insert(0, ci_task1.ci_channels[0].ci_count)
-            data.insert(1, ci_task2.ci_channels[0].ci_count)
-            data.insert(2, ci_task3.ci_channels[0].ci_count)
-            data.insert(3, ci_task4.ci_channels[0].ci_count)
-        else:
-            data = tc_task2.read()
-            data.insert(0, ci_task1.ci_channels[0].ci_count)
-            data.insert(1, ci_task2.ci_channels[0].ci_count)
-            data.insert(2, ci_task3.ci_channels[0].ci_count)
-            data.insert(3, ci_task4.ci_channels[0].ci_count)
+        data = []
+        for i in range(4, len(task_list)):
+            if task_list[i] is not None: data.extend(task_list[i].read())
+        
+        data.insert(0, task_list[0].ci_channels[0].ci_count) # ci_task1
+        data.insert(1, task_list[1].ci_channels[0].ci_count) # ci_task2
+        data.insert(2, task_list[2].ci_channels[0].ci_count) # ci_task3
+        data.insert(3, task_list[3].ci_channels[0].ci_count) # ci_task4
+ 
         return data
+
     except Exception as e:
         return None
  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Close all running tasks
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Update this section with all relevant tasks
 def close_daq():
-
-    global tc_task1
-    global tc_task2
-    global ci_task1
-    global ci_task2
-    global ci_task3
-    global ci_task4
-
+    """
+    Close all running tasks in task_list
+    """
     try:
-        if tc_task1 and tc_task2 is not None:
-            tc_task1.close()
-            tc_task2.close()
-            ci_task1.stop()
-            ci_task1.close()
-            ci_task2.stop()
-            ci_task2.close()
-            ci_task3.stop()
-            ci_task3.close()
-            ci_task4.stop()
-            ci_task4.close()
-        elif tc_task1 is not None:
-            tc_task1.close()
-            ci_task1.stop()
-            ci_task1.close()
-            ci_task2.stop()
-            ci_task2.close()
-            ci_task3.stop()
-            ci_task3.close()
-            ci_task4.stop()
-            ci_task4.close()
-        else:
-            tc_task2.close()
-            ci_task1.stop()
-            ci_task1.close()
-            ci_task2.stop()
-            ci_task2.close()
-            ci_task3.stop()
-            ci_task3.close()
-            ci_task4.stop()
-            ci_task4.close()
+        for task in task_list:
+            if task is not None: task.close()
+    
     except Exception as e:
         print(e)
         return "No tasks to close."
@@ -243,9 +206,13 @@ if __name__ == "__main__":
     #task = nidaqmx.Task()
     # system = nidaqmx.system.System.local()
     for device in system.devices:
-        print(device)
-        print(syste.)
-
+        print(device.name)
+    print(len(system.devices))
+    init_daq()
+    d = read_daq()
+    print(d)
+    close_daq()
+    
        
 
 

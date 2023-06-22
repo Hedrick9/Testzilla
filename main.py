@@ -27,9 +27,9 @@ current_index = 0
 # Simulated Data File 
 file_name = "scratch_data_0.csv"
 # Color Palette
-primary_color = "#000000" # "#f0a2fc" 
+primary_color = "#000000" 
 secondary_color = "#2b2b2a"
-tri_color = "#121212"  #"#facffa"
+tri_color = "#121212"  
 font_color1 = "#ffffff"
 font_style = "Helvetica"
 start_time = QTime.currentTime()
@@ -42,7 +42,6 @@ ni.init_daq()
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define relevant functions prior to their call
-time_index = 0
 class TestTime:
 
     def __init__(self, timing_interval=1):
@@ -78,8 +77,6 @@ pulse_d = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
 def get_data(pcfs=[1, .05, 1, 1]):
     # global test_time
-    global time_index
-    global timing_interval
     global last_data
     global pulse_d
     global pulse_reset
@@ -116,21 +113,25 @@ def update_plot():
     if len(d) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+6], label=str(item), lw=0.5)
+            ax.plot(df[item+8], label=str(item), lw=0.5)
     elif len(d) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+6][-3600:-1], label=str(item), lw=0.5)
+            ax.plot(df[item+8][-3600:-1], label=str(item), lw=0.5)
     # Graph tc channel 1 if none selected
     else:
         if len(df) < 3600:
             ax.clear()
-            ax.plot(df[6], label="1", lw=0.5)
+            ax.plot(df[8], label="ambient", lw=0.5)
         else:
             ax.clear()
-            ax.plot(df[6][-3600:-1], label="1", lw=0.5)
+            ax.plot(df[8][-3600:-1], label="ambient", lw=0.5)
     
     # Format Plot   
+    if graph_window is not None:
+        ax.set_ylim([0, 200])
+    else: 
+        ax.set_ylim([None, None])
     ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=font_color1)
     ax.set_facecolor(tri_color)
     ax.tick_params(labelbottom=False, labelcolor=font_color1, color="#ffffff", labelsize=8)
@@ -154,8 +155,6 @@ def start_test():
     global pulse_d
     global pulse_reset
     global status_indicator
-    global time_index 
-    time_index = 0
     testing = True
     d = []
     pulse_reset = pulse_d
@@ -184,8 +183,6 @@ def reset_():
     global start_time
     global pulse_d
     global pulse_reset
-    global time_index
-    time_index = 0
     pulse_reset = pulse_d
     start_time = QTime.currentTime()
     test_time.reset()
@@ -428,13 +425,13 @@ def update_data_window():
         for row in range(8):
             for column in range(2):
                 index = (row)+(column*8)
-                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+6]))
+                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
     
     if temp_avg_value_1a is not None:
         try:
             t1a = int(temp_avg_value_1a.text())
             t1b = int(temp_avg_value_1b.text())
-            t1_l = data_[t1a+4:t1b+5]
+            t1_l = data_[t1a+6:t1b+7]
             tavg1 = np.mean(np.array([value for value in t1_l if value < 4000]))
             temp_avg_value_1c.setText(" = {}".format(round(tavg1, 1)))
         except Exception as e:
@@ -443,7 +440,7 @@ def update_data_window():
         try:
             t2a = int(temp_avg_value_2a.text())
             t2b = int(temp_avg_value_2b.text())
-            t2_l = data_[t2a+4:t2b+5]
+            t2_l = data_[t2a+6:t2b+7]
             tavg2 = np.mean(np.array([value for value in t2_l if value < 4000]))
             temp_avg_value_2c.setText(" = {}".format(round(tavg2, 1)))
         except Exception as e:
@@ -658,15 +655,15 @@ def update_values():
     time_label_value.setText("{}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if d[-1][6] >=70 and d[-1][6] <80:
-        ambient_label_value.setText("{}".format(d[-1][6]))
+        ambient_label_value.setText("{}".format(d[-1][8]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     elif d[-1][6] >=80:
-        ambient_label_value.setText("{}".format(d[-1][6]))
+        ambient_label_value.setText("{}".format(d[-1][8]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     else:
-        ambient_label_value.setText("{}".format(d[-1][6]))
+        ambient_label_value.setText("{}".format(d[-1][8]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     
