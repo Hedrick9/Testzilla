@@ -11,13 +11,12 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import nidaqmx
 import nidaqmx.system
-import queue
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                   Create Task for each Device/Module
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-q = queue.Queue()
 # Create a task for each nidaqmx event
 try:
+    system = nidaqmx.system.System.local()
 #    tc_task = nidaqmx.Task() # Thermocouple task
     ci_task1 = nidaqmx.Task() # Counter task 1 (Energy)
     ci_task2 = nidaqmx.Task() # Counter task 2 (Gas)
@@ -30,29 +29,31 @@ except Exception as e:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #          Load tasks created in MAX (Measurement & Automation Explroer)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Load thermocouple task1
+#~~~~~~~~~~~ Locate and Load Persisted Tasks ~~~~~~~~~~~~~~~~~~~~~~
 try:
-    system = nidaqmx.system.System.local()
     # Determine the name of the created dask by indexing through tasks
     #print(system.tasks.task_names[0])
     # Create a persisted task - Loads the existing task from memory
     ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[0])
-    ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[1])
-except Exception as e:
-    print("Unable to load task from NI-MAX: PERROR")
-try:
-    # load the persisted task into a python task object
     tc_task1 = ptask1.load() # this task can now be used as others shown above
 except Exception as e:
-    print("Unable to load tc_task1 from NI-MAX")
+    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[0]}")
     tc_task1 = None
-
 try:
-    # load the persisted task into a python task object
+    # Create a persisted task - Loads the existing task from memory
+    ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[1])
     tc_task2 = ptask2.load() # this task can now be used as others shown above
 except Exception as e:
-    print("Unable to load tc_task2 from NI-MAX")
+    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[1]}")
     tc_task2 = None
+try:
+    # Create a persisted task - Loads the existing task from memory
+    ptask3 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[2])
+    tc_task3 = ptask3.load() # this task can now be used as others shown above
+except Exception as e:
+    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[2]}")
+    ai_task = None
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                          Configure NI-DAQ Modules
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,6 +61,7 @@ def config_daq(fs=5):
      
     global tc_task1
     global tc_task2
+    global ai_task
     global ci_task1
     global ci_task2
     global ci_task3
@@ -116,7 +118,7 @@ def config_daq(fs=5):
                 name_to_assign_to_channel="",
                 edge=nidaqmx.constants.Edge.RISING,
                 initial_count=0)
-
+        
     except Exception as e:
         return "Unable to connect to digital input module NI-9411"
 
@@ -127,6 +129,7 @@ def config_daq(fs=5):
 def init_daq(sample_rate=0.2):
 
     global tc_task1
+    global tc_task2
     global ci_task1
     global ci_task2
     global ci_task3
@@ -234,22 +237,15 @@ def close_daq():
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == "__main__":
-
+    
+    import time
 # Print Devices in DAQ
     #task = nidaqmx.Task()
-    system = nidaqmx.system.System.local()
+    # system = nidaqmx.system.System.local()
     for device in system.devices:
         print(device)
-    import threading
-    import time
+        print(syste.)
 
-    init_daq()
-    i=0
-    while i<50:
-        datar = read_daq()
-        i+=1
-        print(datar)
-
-    close_daq()
+       
 
 

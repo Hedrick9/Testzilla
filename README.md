@@ -16,11 +16,11 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Averaging for pulse data
 - [x] Add ambient channel to Main window
 - [ ] Rename channel ability
-- [ ] Correct reset timing
+- [x] Correct reset timing
 - [ ] Correct missed data read Error
 - [x] Rename default temp channel 0
 - [x] Copy data feature
-- [?] Change recording format style
+- [ ] Change recording format style
 - [x] Fix Spacing for widgets
 - [ ] Fix Window close issue
 
