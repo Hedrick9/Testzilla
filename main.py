@@ -654,11 +654,11 @@ def update_values():
 #~~~~ Update Time Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     time_label_value.setText("{}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if d[-1][6] >=70 and d[-1][6] <80:
+    if d[-1][8] >=70 and d[-1][8] <80:
         ambient_label_value.setText("{}".format(d[-1][8]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
-    elif d[-1][6] >=80:
+    elif d[-1][8] >=80:
         ambient_label_value.setText("{}".format(d[-1][8]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))

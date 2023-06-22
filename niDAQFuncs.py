@@ -44,7 +44,7 @@ try:
     task_list.append(ai_task)
 except Exception as e:
     print(f"Unable to load task from NI-MAX: {system.tasks.task_names[0]}")
-    tc_task1 = None
+    ai_task = None
     task_list.append(ai_task)
 try:
     # Create a persisted task - Loads the existing task from memory
@@ -166,7 +166,11 @@ def read_daq():
     """
     try:
         data = []
-        for i in range(4, len(task_list)):
+        if task_list[4] is not None:
+            data.extend(task_list[4].read())
+        else:
+            data.extend([0,0])
+        for i in range(5, len(task_list)):
             if task_list[i] is not None: data.extend(task_list[i].read())
         
         data.insert(0, task_list[0].ci_channels[0].ci_count) # ci_task1
