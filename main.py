@@ -105,6 +105,7 @@ def update_plot():
     #data = pd.read_csv(file_name)
     df = pd.DataFrame(d)
     # Create list of tc channels to graph    
+    graph_ai = False
     if graph_menu is not None:
         tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
         tc_list = [int(name.split()[1]) for name in tc_list_]
@@ -118,7 +119,7 @@ def update_plot():
         ax.clear()
         for item in tc_list:
             ax.plot(df[item+8][-3600:-1], label=str(item), lw=0.5)
-    # Graph tc channel 1 if none selected
+    # Graph tc channel 0 if none selected
     else:
         if len(df) < 3600:
             ax.clear()
