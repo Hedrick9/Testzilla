@@ -105,7 +105,6 @@ def update_plot():
     #data = pd.read_csv(file_name)
     df = pd.DataFrame(d)
     # Create list of tc channels to graph    
-    graph_ai = False
     if graph_menu is not None:
         tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
         tc_list = [int(name.split()[1]) for name in tc_list_]
@@ -136,10 +135,13 @@ def update_plot():
     ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=font_color1)
     ax.set_facecolor(tri_color)
     ax.tick_params(labelbottom=False, labelcolor=font_color1, color="#ffffff", labelsize=8)
+    ax.minorticks_on()
     #ax.spines[:].set_visible(False)#set_color("#ffffff")
     ax.spines[:].set_color(secondary_color)
     ax.spines[:].set_linewidth(0.25)
-    plt.grid(axis='y', linewidth=0.25) #color="white"
+    # ax.grid(which='both', linewidth=0.25, color="#ffffff") 
+    ax.grid(which='major', linewidth=0.3, color="#22ffff") 
+    ax.grid(which='minor', linewidth=0.1, color="#05ff16") 
     # Call canvas.draw() to update the plot on the canvas
     canvas.draw()
 
