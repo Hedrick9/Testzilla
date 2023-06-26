@@ -140,8 +140,10 @@ def update_plot():
     ax.spines[:].set_color(secondary_color)
     ax.spines[:].set_linewidth(0.25)
     # ax.grid(which='both', linewidth=0.25, color="#ffffff") 
-    ax.grid(which='major', linewidth=0.3, color="#22ffff") 
-    ax.grid(which='minor', linewidth=0.1, color="#05ff16") 
+    # ax.grid(which='major', linewidth=0.3, color="#22ffff") 
+    # ax.grid(which='minor', linewidth=0.1, color="#22ffff") 
+    ax.grid(which='major', linewidth=0.3, color="#03fcd3") 
+    ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
     # Call canvas.draw() to update the plot on the canvas
     canvas.draw()
 
@@ -740,6 +742,7 @@ def process_time():
 test_time = TestTime(1) #initialize timing sequence
 # Create a QTimer to call the update_plot function at a fixed interval
 timer = QTimer()
+timer.setTimerType(Qt.PreciseTimer)
 timer.start(1000)
 # timer.timeout.connect(process_time)
 # timer.timeout.connect(process_time_start)
