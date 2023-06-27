@@ -43,7 +43,7 @@ try:
     ai_task = ptask1.load() # this task can now be used as others shown above
     task_list.append(ai_task)
 except Exception as e:
-    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[0]}")
+    print(f"Unable to load task from NI-MAX: ai_task") # system.tasks.task_names[0]
     ai_task = None
     task_list.append(ai_task)
 try:
@@ -52,7 +52,7 @@ try:
     tc_task1 = ptask2.load() # this task can now be used as others shown above
     task_list.append(tc_task1)
 except Exception as e:
-    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[1]}")
+    print(f"Unable to load task from NI-MAX: tc_task1") # system.tasks.task_names[1]
     tc_task1 = None
     task_list.append(tc_task1)
 try:
@@ -61,7 +61,7 @@ try:
     tc_task2 = ptask3.load() # this task can now be used as others shown above
     task_list.append(tc_task2)
 except Exception as e:
-    print(f"Unable to load task from NI-MAX: {system.tasks.task_names[2]}")
+    print(f"Unable to load task from NI-MAX: tc_task2") # system.tasks.task_names[2]
     tc_task2 = None
     task_list.append(tc_task2)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
