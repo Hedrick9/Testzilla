@@ -19,7 +19,7 @@ from pymodbus.payload import BinaryPayloadDecoder
 
 def init(
     port="COM3", 
-    baudrate=9600, 
+    baudrate=9600,  # 9600
     bytesize=8,
     parity='N', 
     stopbits=1, 
@@ -53,9 +53,11 @@ def init(
 #                   Read from Modbus float register
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def read_float(client, starting_register, num_registers, device_address=1):
+def read_registers(client, starting_register, num_registers, device_address=1, *args):
     """
-    Read from 32-bit floating registers: Convert to decimal
+    Read from specified registers: Output will be binary in decimal format. 
+    Will likely need to be passed through a conversion function depending on 
+    format type.
     client - Client object established during init function
     starting_register - First register read
     num_registers - Number of registers read after first register read
@@ -69,21 +71,45 @@ def read_float(client, starting_register, num_registers, device_address=1):
                 count=num_registers,
                 slave=device_address
             )
+            if len(args) > 0:
+
+                response2 = client.read_holding_registers(
+                    address=args[0],
+                    count=args[1],
+                    slave=device_address)
+            else: response2 = None
             
             if response.isError():
                 print(f"Modbus Error: {response}")
                 return None
             else:
-                data = response.registers
-                voltage_binary = data[0:2]
-                binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.Big, wordorder=Endian.Big)
-                result = binary_data.decode_32bit_float()
+                result = response.registers
+                if response2 is not None:
+                    result2 = response2.registers
+                else: result2 = None
+                result.extend(result2)
                 return result
         finally:
             # Close the Modbus connection
             client.close()
     else:
         print("Failed to connect to the Shark 200 meter.")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                               Conversions
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def convert_float(data):
+
+    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.Big, wordorder=Endian.Big)
+    result = binary_data.decode_32bit_float()
+    return result
+
+def convert_32bit_int(data):
+
+    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.Big, wordorder=Endian.Big)
+    result = binary_data.decode_32bit_int()
+    return result
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #             Read from all registers of interest on Shark 200
@@ -93,17 +119,37 @@ def get_all(client, device_address=1):
     """
     Designed to read all registers of interest for Shark200 meter
     """
-    V_AN = round(read_float(client, 999, 2, device_address), 1)
-    V_BN = round(read_float(client, 1001, 2, device_address), 1)
-    V_CN = round(read_float(client, 1003, 2, device_address), 1)
+    register_group = read_registers(client, 999, 26, device_address, 1499, 2)
+    V_AN = round(convert_float(register_group[0:2]), 1) # Register 999 - 1000
+    V_BN = round(convert_float(register_group[2:4]), 1) # Register 1001 - 1002
+    V_CN = round(convert_float(register_group[4:6]), 1) # Register 1003 - 1004
+    V_AB = round(convert_float(register_group[6:8]), 1) # Register 1005 - 1006
+    V_BC = round(convert_float(register_group[8:10]), 1) # Register 1007 - 1008
+    V_CA = round(convert_float(register_group[10:12]), 1) # Register 1009 - 1010
+    I_A = round(convert_float(register_group[12:14]), 1) # Register 1011 - 1012
+    I_B = round(convert_float(register_group[14:16]), 1) # Register 1013 - 1014
+    I_C = round(convert_float(register_group[16:18]), 1) # Register 1015 - 1016
+    watts = round(convert_float(register_group[18:20]), 1) # Register 1017 - 1018
+    pf = round(convert_float(register_group[24:26]), 1) # Register 1023 - 1024
+
+    wh = convert_32bit_int(register_group[26:28]) # Register 1499 - 1500
+
     
-    return V_AN, V_BN, V_CN
+    return V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, I_A, I_B, I_C, watts, wh, pf
 
 
 
 if __name__ == "__main__":
-
+    import time
     client = init()
-    data = get_all(client)
-    print(data)
+    while True:
+        start = time.time()
+        data = get_all(client)
+        print(data)
+        process_time = time.time() - start
+        print(f"Process Time: {process_time}")
+
+    # a = read_registers(client, 999, 2, 1, 1499, 2)
+
+
     

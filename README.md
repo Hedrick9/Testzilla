@@ -25,6 +25,9 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Copy data feature
 - [x] Fix Spacing for widgets
 - [ ] Fix Window close issue
+- [ ] Logging extra channel specified by user (config page)
+- [ ] Averaging for intervals greater than 1 second
+
 
 
 ```python

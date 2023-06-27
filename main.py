@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from datetime import date, datetime, timedelta
 import threading
 import niDAQFuncs as ni
+import modbusFuncs as mb
 from PySide6.QtCore import QTime, QTimer, QSize, Qt
 from PySide6.QtGui import (QIcon, QAction, QStandardItemModel, QStandardItem, 
         QFont, QPixmap)
@@ -38,6 +39,7 @@ print(start_time)
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ni.init_daq()
+# client = mb.init()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,6 +86,8 @@ def get_data(pcfs=[1, .05, 1, 1]):
     tod = datetime.now().strftime("%H:%M:%S")
     # Try to read in data from ni hardware; otherwise return list of 0's
     data_ = ni.read_daq()
+    # modbus_data_raw = mb.get_all(client)
+    # print(modbus_data_raw)
     if data_ is not None:
         data_ = list(np.around(np.array(ni.read_daq()),1))
         data = list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
@@ -139,10 +143,7 @@ def update_plot():
     #ax.spines[:].set_visible(False)#set_color("#ffffff")
     ax.spines[:].set_color(secondary_color)
     ax.spines[:].set_linewidth(0.25)
-    # ax.grid(which='both', linewidth=0.25, color="#ffffff") 
-    # ax.grid(which='major', linewidth=0.3, color="#22ffff") 
-    # ax.grid(which='minor', linewidth=0.1, color="#22ffff") 
-    ax.grid(which='major', linewidth=0.3, color="#03fcd3") 
+    ax.grid(which='major', linewidth=0.3, color="#03fcd3") #22ffff
     ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
     # Call canvas.draw() to update the plot on the canvas
     canvas.draw()
@@ -744,8 +745,8 @@ test_time = TestTime(1) #initialize timing sequence
 timer = QTimer()
 timer.setTimerType(Qt.PreciseTimer)
 timer.start(1000)
-# timer.timeout.connect(process_time)
-# timer.timeout.connect(process_time_start)
+timer.timeout.connect(process_time)
+timer.timeout.connect(process_time_start)
 timer.timeout.connect(test_time.update_time)
 timer.timeout.connect(get_data)
 timer.timeout.connect(update_plot)
