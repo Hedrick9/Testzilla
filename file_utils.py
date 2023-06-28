@@ -40,7 +40,7 @@ def file_setup(testing):
         # Create unique data file
         os.chdir(current_directory + "/Data")
         file_date = date.today().strftime("%m-%d-%y")
-        headers = ["Time of Day", "Test Time", "Wh","Gas","Water","Extra",]
+        headers = ["Time of Day", "Test Time", "Wh","Gas","Water","Extra", "ai_volt1", "ai_volt2"]
         for i in range(1, 17):
             headers.append("Temp {}".format(i))
             
