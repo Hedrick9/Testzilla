@@ -28,6 +28,8 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Logging extra channel specified by user (config page)
 - [ ] Averaging for intervals greater than 1 second
 - [ ] Logging data for intervals greater than 1 second
+- [ ] Choose specific channel numbers for graphing
+- [ ] Swap upper and lower bound
 
 
 

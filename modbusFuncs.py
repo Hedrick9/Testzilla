@@ -19,7 +19,7 @@ from pymodbus.payload import BinaryPayloadDecoder
 
 def init(
     port="COM3", 
-    baudrate=9600,  # 9600
+    baudrate=19200,  # 19200 9600
     bytesize=8,
     parity='N', 
     stopbits=1, 
@@ -131,11 +131,12 @@ def get_all(client, device_address=1):
     I_C = round(convert_float(register_group[16:18]), 1) # Register 1015 - 1016
     watts = round(convert_float(register_group[18:20]), 1) # Register 1017 - 1018
     pf = round(convert_float(register_group[24:26]), 1) # Register 1023 - 1024
-
     wh = convert_32bit_int(register_group[26:28]) # Register 1499 - 1500
 
+    V_avg = round(sum([item for item in [V_AB, V_BC, V_CA] if item > 120])/3, 1) 
+
     
-    return V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, I_A, I_B, I_C, watts, wh, pf
+    return V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, V_avg, I_A, I_B, I_C, watts, wh, pf
 
 
 
