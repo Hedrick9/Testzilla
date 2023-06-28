@@ -27,6 +27,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Fix Window close issue
 - [ ] Logging extra channel specified by user (config page)
 - [ ] Averaging for intervals greater than 1 second
+- [ ] Logging data for intervals greater than 1 second
 
 
 
