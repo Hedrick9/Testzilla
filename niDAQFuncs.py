@@ -96,7 +96,7 @@ def config_daq(fs=5):
     # Configure NI-9411 digital input channel for pulse counting
 
     try:
-        if task_list[4] and task_list[5] is not None: # Check which slot ci module is in 
+        if task_list[5] and task_list[6] is not None: # Check which slot ci module is in 
             ci_slot=3
         else:
             ci_slot=2
