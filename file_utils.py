@@ -30,7 +30,7 @@ def create_directory():
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~ CSV File Setup Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 file_name = None
-def file_setup(testing):
+def file_setup(testing, tc_modules):
     global file_name
     global current_directory
         
@@ -40,9 +40,14 @@ def file_setup(testing):
         # Create unique data file
         os.chdir(current_directory + "/Data")
         file_date = date.today().strftime("%m-%d-%y")
-        headers = ["Time of Day", "Test Time", "Wh","Gas","Water","Extra", "ai_volt1", "ai_volt2"]
-        for i in range(1, 17):
-            headers.append("Temp {}".format(i))
+        headers = ["Time of Day", "Test Time", "Wh","Gas","Water","Extra", "AI 1", "AI 2", "Ambient"]
+        if tc_modules == 1:
+            for i in range(1, 16):
+                headers.append("Temp {}".format(i))
+        else: 
+            for i in range(1, 32):
+                headers.append("Temp {}".format(i))
+
             
         for i in range(50):
             if not os.path.isfile(os.getcwd() +'/'+ file_date +'_'+ str(i) + ".csv"):

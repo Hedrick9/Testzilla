@@ -151,6 +151,8 @@ def init_daq():
         config_daq()
         for i in range(0, 4):
             if task_list[i] is not None: task_list[i].start()
+        if task_list[5] and task_list[6] is not None: return 2
+        else: return 1
    
     except Exception as e:
         print("Unable to Initialize NI-DAQ")

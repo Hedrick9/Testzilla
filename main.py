@@ -38,7 +38,7 @@ print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ni.init_daq()
+ni_modules = ni.init_daq()
 # client = mb.init()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
@@ -239,9 +239,9 @@ def show_data_window():
 
     
 #~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    tc_model = QStandardItemModel(8, 2)
+    tc_model = QStandardItemModel(8, 4)
     for row in range(8):
-        for column in range(2):
+        for column in range(4):
             index = (row)+(column*8)
             item = QStandardItem("Temp {}: NA".format(index))
             tc_model.setItem(row, column, item)
@@ -364,11 +364,11 @@ def set_graph_window():
     layout = QVBoxLayout()
     layout.setSpacing(0)
 
-    label1 = QLabel("Set Y Lower Bound")
+    label1 = QLabel("Set Y Upper Bound")
     label1.setStyleSheet("color: #ffffff; font: 14px;")
     entry1 = QLineEdit()
     entry1.setStyleSheet("color: #ffffff; font: 14px;")
-    label2 = QLabel("Set Y Upper Bound")
+    label2 = QLabel("Set Y Lower Bound")
     label2.setStyleSheet("color: #ffffff; font: 14px;")
     entry2 = QLineEdit()
     entry2.setStyleSheet("color: #ffffff; font: 14px;")
@@ -429,9 +429,15 @@ def update_data_window():
     if tc_model is not None:
         # Update the values in the table 
         for row in range(8):
-            for column in range(2):
-                index = (row)+(column*8)
-                tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
+            if len(d[0]) > 25:
+                for column in range(4):
+                    index = (row)+(column*8)
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
+            else:
+                for column in range(2):
+                    index = (row)+(column*8)
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
+
     
     if temp_avg_value_1a is not None:
         try:
@@ -658,7 +664,7 @@ def update_values():
     status_bar_label.setText("Elapsed Time: {}".format(elapsed_time))
     
 #~~~~ Update Time Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    time_label_value.setText("{}".format(test_time.test_time_min))
+    time_label_value.setText("{:.2f}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if d[-1][8] >=70 and d[-1][8] <80:
         ambient_label_value.setText("{}".format(d[-1][8]))
@@ -767,7 +773,7 @@ if __name__ == "__main__":
         fu.create_directory()
        
         # Create new CSV Test File
-        fu.file_setup(testing)
+        fu.file_setup(testing, ni_modules)
         status.append("Adding new file: {}".format(fu.file_name))
 
         app.exec()

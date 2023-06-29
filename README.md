@@ -9,9 +9,9 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Allow for new file creation
 - [x] Work on config page: Time sampling
 - [ ] Work on config page: tc offsets, look into file upload
-- [ ] Incorporate modbus read capabilites
+- [x] Incorporate modbus read capabilites
     - [x] Read in modbus data from Shark meter/General device
-    - [ ] Determine registers necessary 
+    - [x] Determine registers necessary 
 - [x] Incorporate ni AI module (ni-9215)
 - [x] Add 2 tc module capability - detect how many modules available and scale appropriately?
 - [x] Fix timing and time data
@@ -29,7 +29,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Averaging for intervals greater than 1 second
 - [ ] Logging data for intervals greater than 1 second
 - [ ] Choose specific channel numbers for graphing
-- [ ] Swap upper and lower bound
+- [x] Swap upper and lower bound for graph range
 
 
 
