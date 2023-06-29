@@ -112,6 +112,8 @@ def update_plot():
     if graph_menu is not None:
         tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
         tc_list = [int(name.split()[1]) for name in tc_list_]
+        while len(tc_list) > 9:
+            tc_list.remove(tc_list[-1])
     
     # Graph tc channels in list
     if len(d) < 3600 and len(tc_list)>0:
@@ -601,7 +603,7 @@ data_menu.addAction(view_data_action)
 # Add a Graph menu
 graph_menu = QMenu("Graph", menubar)
 tc_items = []
-for i in range(8):
+for i in range(16):
     item = QAction("Temp {}".format(i), graph_menu, checkable=True)
     tc_items.append(item)
 menubar.addMenu(graph_menu)
@@ -614,7 +616,7 @@ graph_menu_action.setFont(g_font)
 graph_menu.triggered.connect(show_graph_window)
 graph_menu.addAction(graph_menu_action)
 
-for i in range(8):
+for i in range(16):
     graph_menu.addAction(tc_items[i])
 
 set_graph_action = QAction("Set Graph Range")
