@@ -133,11 +133,23 @@ def get_all(client, device_address=1):
     pf = round(convert_float(register_group[24:26]), 2) # Register 1023 - 1024
     wh = convert_32bit_int(register_group[26:28]) # Register 1499 - 1500
 
-    V_avg = round(sum([item for item in [V_AB, V_BC, V_CA] if item > 120])/3, 1) 
+    if I_A == 0: V_avg = V_BC
+    elif I_B == 0: V_avg = V_CA
+    elif I_C == 0: V_avg = V_AB
+    else: V_avg = round(sum([V_AB, V_BC, V_CA])/3, 1) 
 
     
-    return V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, V_avg, I_A, I_B, I_C, watts, wh, pf
+    return V_avg, watts, wh, V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, I_A, I_B, I_C, pf
 
+def data_stream(client, stack):
+    """
+    Read modbus data continuously. Function designed for threading.
+    """
+    while True:
+        mb_data = list(get_all(client))
+        if len(stack) > 0:
+            stack.pop(0)
+        stack.append(mb_data)
 
 
 if __name__ == "__main__":

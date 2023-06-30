@@ -40,7 +40,8 @@ def file_setup(testing, tc_modules):
         # Create unique data file
         os.chdir(current_directory + "/Data")
         file_date = date.today().strftime("%m-%d-%y")
-        headers = ["Time of Day", "Test Time", "Wh","Gas","Water","Extra", "AI 1", "AI 2", "Ambient"]
+        headers = ["Time of Day", "Test Time", "Voltage", "W", "Wh", "Wh","Gas","Water","Extra"] + \
+                  ["AI 1", "AI 2", "Ambient"]
         if tc_modules == 1:
             for i in range(1, 16):
                 headers.append("Temp {}".format(i))

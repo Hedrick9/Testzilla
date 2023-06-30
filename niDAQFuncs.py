@@ -151,11 +151,12 @@ def init_daq():
         config_daq()
         for i in range(0, 4):
             if task_list[i] is not None: task_list[i].start()
-        if task_list[5] and task_list[6] is not None: return 2
+        if task_list[5] and task_list[6] is not None: return 2, task_list
         else: return 1
    
     except Exception as e:
         print("Unable to Initialize NI-DAQ")
+        return None
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Read Data from tasks
@@ -183,7 +184,7 @@ def read_daq():
         return data
 
     except Exception as e:
-        return None
+        return e
  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Close all running tasks

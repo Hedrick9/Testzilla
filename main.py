@@ -39,7 +39,11 @@ print(start_time)
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ni_modules = ni.init_daq()
-# client = mb.init()
+client = mb.init()
+mb_data = []
+# Start reading modbus data
+thread = threading.Thread(target=mb.data_stream, args=(client, mb_data,), daemon=True)
+thread.start()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,15 +87,14 @@ def get_data(pcfs=[1, .05, 1, 1]):
     global pulse_d
     global pulse_reset
     global data_
+    global mb_data
     tod = datetime.now().strftime("%H:%M:%S")
     # Try to read in data from ni hardware; otherwise return list of 0's
-    data_ = ni.read_daq()
-    # modbus_data_raw = mb.get_all(client)
-    # print(modbus_data_raw)
-    if data_ is not None:
+    if ni_modules is not None:
         data_ = list(np.around(np.array(ni.read_daq()),1))
-        data = list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
-        ["open" if x > 4000 else x for x in data_[4:]]
+        data = mb_data[0][:3] + \
+        list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
+        [None if x > 4000 else x for x in data_[4:]]
         data.insert(0, tod)
         data.insert(1, test_time.test_time_min)
         d.append(data)
@@ -99,7 +102,7 @@ def get_data(pcfs=[1, .05, 1, 1]):
         last_data = data_[:4]
     else:
         status.append("error reading from ni-DAQ")
-        data_ = list(np.zeros(20))
+        data_ = list(np.zeros(22))
         data_.insert(0, tod)
         data_.insert(1, test_time.test_time_min)
         d.append(data_)
@@ -119,19 +122,19 @@ def update_plot():
     if len(d) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+8], label=str(item), lw=0.5)
+            ax.plot(df[item+11], label=str(item), lw=0.5)
     elif len(d) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+8][-3600:-1], label=str(item), lw=0.5)
+            ax.plot(df[item+11][-3600:-1], label=str(item), lw=0.5)
     # Graph tc channel 0 if none selected
     else:
         if len(df) < 3600:
             ax.clear()
-            ax.plot(df[8], label="ambient", lw=0.5)
+            ax.plot(df[11], label="ambient", lw=0.5)
         else:
             ax.clear()
-            ax.plot(df[8][-3600:-1], label="ambient", lw=0.5)
+            ax.plot(df[11][-3600:-1], label="ambient", lw=0.5)
     
     # Format Plot   
     if graph_window is not None:
@@ -431,14 +434,14 @@ def update_data_window():
     if tc_model is not None:
         # Update the values in the table 
         for row in range(8):
-            if len(d[0]) > 25:
+            if len(d[0]) > 30:
                 for column in range(4):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+11]))
             else:
                 for column in range(2):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+8]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+11]))
 
     
     if temp_avg_value_1a is not None:
@@ -668,16 +671,22 @@ def update_values():
 #~~~~ Update Time Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     time_label_value.setText("{:.2f}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if d[-1][8] >=70 and d[-1][8] <80:
-        ambient_label_value.setText("{}".format(d[-1][8]))
+
+    if d[-1][11] == None:
+        ambient_label_value.setText("Open")
+        ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
+            font-family:{};".format(font_style))
+
+    elif d[-1][11] >=70 and d[-1][11] <80:
+        ambient_label_value.setText("{}".format(d[-1][11]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
-    elif d[-1][8] >=80:
-        ambient_label_value.setText("{}".format(d[-1][8]))
+    elif d[-1][11] >=80:
+        ambient_label_value.setText("{}".format(d[-1][11]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     else:
-        ambient_label_value.setText("{}".format(d[-1][8]))
+        ambient_label_value.setText("{}".format(d[-1][11]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     
@@ -779,11 +788,12 @@ if __name__ == "__main__":
         status.append("Adding new file: {}".format(fu.file_name))
 
         app.exec()
+    except KeyboardInterrupt:
+        print("Programa Terminado.")
     except Exception as e:
         print(e)
 
     finally:
         ni.close_daq()
-
     sys.exit()
 
