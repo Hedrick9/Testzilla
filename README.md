@@ -5,13 +5,14 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Fix format of test time
 - [x] Fix graph config: slect list of items
 - [ ] Adjust plot scale for graph - Include autoscale option
-- [ ] Fix graphing for null/open channels
+- [x] Fix graphing for null/open channels
 - [x] Allow for new file creation
 - [x] Work on config page: Time sampling
 - [ ] Work on config page: tc offsets, look into file upload
 - [x] Incorporate modbus read capabilites
     - [x] Read in modbus data from Shark meter/General device
     - [x] Determine registers necessary 
+- [x] Incorporate modbus write function for accumulator reset
 - [x] Incorporate ni AI module (ni-9215)
 - [x] Add 2 tc module capability - detect how many modules available and scale appropriately?
 - [x] Fix timing and time data

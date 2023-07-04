@@ -38,12 +38,18 @@ print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Initialize ni DAQ
 ni_modules = ni.init_daq()
-client = mb.init()
-mb_data = []
-# Start reading modbus data
-thread = threading.Thread(target=mb.data_stream, args=(client, mb_data,), daemon=True)
-thread.start()
+# Initialize modbus client connection and start reading modbus data
+try:
+    client = mb.init()
+    mb.write_(client, 20000, 5555, device_address=1) # reset energy accumulators    
+    mb_data = []
+    thread = threading.Thread(target=mb.data_stream, args=(client, mb_data,), daemon=True)
+    thread.start()
+except Exception as e:
+    print("Unable to connect to modbus device.")
+    mb_data = [list(np.zeros(13))]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,7 +87,7 @@ d = []
 last_data = [0, 0, 0, 0]
 pulse_d = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
-def get_data(pcfs=[1, .05, 1, 1]):
+def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
     # global test_time
     global last_data
     global pulse_d

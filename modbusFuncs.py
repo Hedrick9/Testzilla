@@ -48,9 +48,30 @@ def init(
     except Exception as e:
         print("Failed to establish modbus connection.")
         return None
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       Write to Modbus register
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def write_(client, register_address, command, device_address=1):
+    """
+    Write to specified modbus register: Pymodbus should handle encoding.
+    Example for resetting energy accumulators:
+    write_(client, register_address=20000, command=5555, device_address=1)
+    """
+    client.connect()
+    
+    try:
+        # Send the command
+        response = client.write_register(register_address, command, slave=device_address)
+        if response.isError():
+            print(f"Command sending failed: {response}")
+        else:
+            print("Command sent successfully")
+
+    finally:
+        client.close()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                   Read from Modbus float register
+#                       Read from Modbus registers
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def read_registers(client, starting_register, num_registers, device_address=1, *args):
@@ -119,27 +140,30 @@ def get_all(client, device_address=1):
     """
     Designed to read all registers of interest for Shark200 meter
     """
-    register_group = read_registers(client, 999, 26, device_address, 1499, 2)
-    V_AN = round(convert_float(register_group[0:2]), 1) # Register 999 - 1000
-    V_BN = round(convert_float(register_group[2:4]), 1) # Register 1001 - 1002
-    V_CN = round(convert_float(register_group[4:6]), 1) # Register 1003 - 1004
-    V_AB = round(convert_float(register_group[6:8]), 1) # Register 1005 - 1006
-    V_BC = round(convert_float(register_group[8:10]), 1) # Register 1007 - 1008
-    V_CA = round(convert_float(register_group[10:12]), 1) # Register 1009 - 1010
-    I_A = round(convert_float(register_group[12:14]), 1) # Register 1011 - 1012
-    I_B = round(convert_float(register_group[14:16]), 1) # Register 1013 - 1014
-    I_C = round(convert_float(register_group[16:18]), 1) # Register 1015 - 1016
-    watts = round(convert_float(register_group[18:20]), 1) # Register 1017 - 1018
-    pf = round(convert_float(register_group[24:26]), 2) # Register 1023 - 1024
-    wh = convert_32bit_int(register_group[26:28]) # Register 1499 - 1500
+    try:
+        register_group = read_registers(client, 999, 26, device_address, 1499, 2)
+        V_AN = round(convert_float(register_group[0:2]), 1) # Register 999 - 1000
+        V_BN = round(convert_float(register_group[2:4]), 1) # Register 1001 - 1002
+        V_CN = round(convert_float(register_group[4:6]), 1) # Register 1003 - 1004
+        V_AB = round(convert_float(register_group[6:8]), 1) # Register 1005 - 1006
+        V_BC = round(convert_float(register_group[8:10]), 1) # Register 1007 - 1008
+        V_CA = round(convert_float(register_group[10:12]), 1) # Register 1009 - 1010
+        I_A = round(convert_float(register_group[12:14]), 1) # Register 1011 - 1012
+        I_B = round(convert_float(register_group[14:16]), 1) # Register 1013 - 1014
+        I_C = round(convert_float(register_group[16:18]), 1) # Register 1015 - 1016
+        watts = round(convert_float(register_group[18:20]), 1) # Register 1017 - 1018
+        pf = round(convert_float(register_group[24:26]), 2) # Register 1023 - 1024
+        wh = convert_32bit_int(register_group[26:28]) # Register 1499 - 1500
 
-    if I_A == 0: V_avg = V_BC
-    elif I_B == 0: V_avg = V_CA
-    elif I_C == 0: V_avg = V_AB
-    else: V_avg = round(sum([V_AB, V_BC, V_CA])/3, 1) 
+        if I_A == 0: V_avg = V_BC
+        elif I_B == 0: V_avg = V_CA
+        elif I_C == 0: V_avg = V_AB
+        else: V_avg = round(sum([V_AB, V_BC, V_CA])/3, 1) 
+        return V_avg, watts, wh, V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, I_A, I_B, I_C, pf
 
+    except TypeError:
+        return None
     
-    return V_avg, watts, wh, V_AN, V_BN, V_CN, V_AB, V_BC, V_CA, I_A, I_B, I_C, pf
 
 def data_stream(client, stack):
     """
@@ -155,6 +179,7 @@ def data_stream(client, stack):
 if __name__ == "__main__":
     import time
     client = init()
+    write_(client, 20000, 5555, device_address=1)
     while True:
         start = time.time()
         data = get_all(client)
