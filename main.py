@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 import threading
 import niDAQFuncs as ni
 import modbusFuncs as mb
-from PySide6.QtCore import QTime, QTimer, QSize, Qt
+from PySide6.QtCore import QTime, QTimer, Qt 
 from PySide6.QtGui import (QIcon, QAction, QStandardItemModel, QStandardItem, 
         QFont, QPixmap)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
@@ -25,8 +25,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 status = []
 testing = False # Test Status
 current_index = 0
-# Simulated Data File 
-file_name = "scratch_data_0.csv"
 # Color Palette
 primary_color = "#000000" 
 secondary_color = "#2b2b2a"
@@ -38,7 +36,7 @@ print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Initialize ni DAQ
+# Initializes ni DAQ and returns number of tc modules available
 ni_modules = ni.init_daq()
 # Initialize modbus client connection and start reading modbus data
 try:
@@ -48,6 +46,7 @@ try:
     thread = threading.Thread(target=mb.data_stream, args=(client, mb_data,), daemon=True)
     thread.start()
 except Exception as e:
+    status.append("Unable to connect to modbus device.")
     print("Unable to connect to modbus device.")
     mb_data = [list(np.zeros(13))]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,42 +80,53 @@ class TestTime:
         self.test_time = 0
         self.test_time_min = 0
 
-
-data_ = None
-d = []
-last_data = [0, 0, 0, 0]
-pulse_d = [0, 0, 0, 0]
+ni_data = None
+data_log = []
+last_pulse_data = [0, 0, 0, 0]
+pulse_data = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
 def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
-    # global test_time
-    global last_data
-    global pulse_d
+    global last_pulse_data
+    global pulse_data
     global pulse_reset
-    global data_
+    global ni_data
     global mb_data
     tod = datetime.now().strftime("%H:%M:%S")
     # Try to read in data from ni hardware; otherwise return list of 0's
     if ni_modules is not None:
-        data_ = list(np.around(np.array(ni.read_daq()),1))
+        ni_data = list(np.around(np.array(ni.read_daq()),1))
         data = mb_data[0][:3] + \
-        list(np.multiply(pcfs, np.array(data_[:4])-np.array(last_data))) + \
-        [None if x > 4000 else x for x in data_[4:]]
+        list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(last_pulse_data))) + \
+        [None if x > 4000 else x for x in ni_data[4:]]
         data.insert(0, tod)
         data.insert(1, test_time.test_time_min)
-        d.append(data)
-        pulse_d = list(np.array(data_[:4])-np.array(pulse_reset))
-        last_data = data_[:4]
+        data_log.append(data)
+        pulse_data = list(np.array(ni_data[:4])-np.array(pulse_reset))
+        last_pulse_data = ni_data[:4]
     else:
         status.append("error reading from ni-DAQ")
-        data_ = list(np.zeros(22))
-        data_.insert(0, tod)
-        data_.insert(1, test_time.test_time_min)
-        d.append(data_)
+        data = list(np.zeros(25))
+        data.insert(0, tod)
+        data.insert(1, test_time.test_time_min)
+        data_log.append(data)
+    if test_time.timing_interval == 1: data_to_write = data_log[-1]
+    else:
+        data_buf = np.array(data_log[-test_time.timing_interval:])
+        average_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,4,5,6,7,8]).mean()
+        sum_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,2,3,4]).sum()
+        data_to_write = data_log[-1][:2] + \                   # Timestamp and Test Time
+                        round(list(average_data[0:2]), 1) + \ # modbus Voltage and Watts
+                        data_log[-1][4:5] + \                 # modbus Wh
+                        list(sum_data[0:4]) + \               # ni pulse channels
+                        round(list(average_data[2:]), 1)      # ni ai and tc modules
+
+    print(len(data_to_write))
+
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
     # Update the plot with new data
     #data = pd.read_csv(file_name)
-    df = pd.DataFrame(d)
+    df = pd.DataFrame(data_log)
     # Create list of tc channels to graph    
     if graph_menu is not None:
         tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
@@ -125,11 +135,11 @@ def update_plot():
             tc_list.remove(tc_list[-1])
     
     # Graph tc channels in list
-    if len(d) < 3600 and len(tc_list)>0:
+    if len(data_log) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
             ax.plot(df[item+11], label=str(item), lw=0.5)
-    elif len(d) >= 3600 and len(tc_list)>0:
+    elif len(data_log) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
             ax.plot(df[item+11][-3600:-1], label=str(item), lw=0.5)
@@ -168,13 +178,13 @@ def update_system_status(status):
 def start_test():
     global testing
     global start_time
-    global d
-    global pulse_d
+    global data_log
+    global pulse_data
     global pulse_reset
     global status_indicator
     testing = True
-    d = []
-    pulse_reset = pulse_d
+    data_log = []
+    pulse_reset = pulse_data
     status.append("testing in progress...")
     status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
         color: #ffffff; font-weight: bold;")
@@ -198,9 +208,9 @@ def stop_test():
 #~~~~~~~~~ Slot function for handling reset button click event ~~~~~~~~~~~~~~~~
 def reset_():
     global start_time
-    global pulse_d
+    global pulse_data
     global pulse_reset
-    pulse_reset = pulse_d
+    pulse_reset = pulse_data
     start_time = QTime.currentTime()
     test_time.reset()
     timer.start(1000)
@@ -436,25 +446,25 @@ def set_config_window():
 
 #~~~~~~~~~~~~~~~~~~~~~ Update Function for Data Window ~~~~~~~~~~~~~~~~~~~~~~~~
 def update_data_window():
-    global data_
+    global ni_data
     if tc_model is not None:
         # Update the values in the table 
         for row in range(8):
-            if len(d[0]) > 30:
+            if len(data_log[0]) > 30:
                 for column in range(4):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+11]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
             else:
                 for column in range(2):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, d[-1][index+11]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
 
     
     if temp_avg_value_1a is not None:
         try:
             t1a = int(temp_avg_value_1a.text())
             t1b = int(temp_avg_value_1b.text())
-            t1_l = data_[t1a+6:t1b+7]
+            t1_l = ni_data[t1a+6:t1b+7]
             tavg1 = np.mean(np.array([value for value in t1_l if value < 4000]))
             temp_avg_value_1c.setText(" = {}".format(round(tavg1, 1)))
         except Exception as e:
@@ -463,7 +473,7 @@ def update_data_window():
         try:
             t2a = int(temp_avg_value_2a.text())
             t2b = int(temp_avg_value_2b.text())
-            t2_l = data_[t2a+6:t2b+7]
+            t2_l = ni_data[t2a+6:t2b+7]
             tavg2 = np.mean(np.array([value for value in t2_l if value < 4000]))
             temp_avg_value_2c.setText(" = {}".format(round(tavg2, 1)))
         except Exception as e:
@@ -472,9 +482,9 @@ def update_data_window():
     if pulse_model is not None:
         # Update the values in pulse table
         for i in range(4):
-            pulse_model.item(1, i).setText("Interval: {}".format(d[-1][i+2]))
+            pulse_model.item(1, i).setText("Interval: {}".format(data_log[-1][i+2]))
         for i in range(4):
-            pulse_model.item(2, i).setText("Total: {}".format(pulse_d[i]))
+            pulse_model.item(2, i).setText("Total: {}".format(pulse_data[i]))
 
     if index_label is not None:
         index_label.setText("Current Index = {}".format(current_index))
@@ -678,21 +688,21 @@ def update_values():
     time_label_value.setText("{:.2f}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if d[-1][11] == None:
+    if data_log[-1][11] == None:
         ambient_label_value.setText("Open")
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
 
-    elif d[-1][11] >=70 and d[-1][11] <80:
-        ambient_label_value.setText("{}".format(d[-1][11]))
+    elif data_log[-1][11] >=70 and data_log[-1][11] <80:
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
-    elif d[-1][11] >=80:
-        ambient_label_value.setText("{}".format(d[-1][11]))
+    elif data_log[-1][11] >=80:
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     else:
-        ambient_label_value.setText("{}".format(d[-1][11]))
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     
@@ -746,7 +756,9 @@ main_layout.addWidget(border_line2)
 main_layout.addWidget(start_button)
 main_layout.addWidget(stop_button)
 main_layout.addWidget(reset_button)
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#               Process Time Tool (For application testing only)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pt_start = time.time()
 def process_time_start():
     global pt_start
@@ -776,7 +788,8 @@ timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_values)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-timer.timeout.connect(lambda: fu.write_data(d[-1], testing, test_time.time_to_write))
+timer.timeout.connect(lambda: fu.write_data(data_log[-1], testing, test_time.time_to_write))
+# timer.timeout.connect(lambda: fu.write_data(data_log[-test_time.timing_interval:], testing, test_time.time_to_write))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         Main Program Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -801,5 +814,5 @@ if __name__ == "__main__":
 
     finally:
         ni.close_daq()
-    sys.exit()
+        sys.exit()
 
