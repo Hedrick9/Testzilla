@@ -82,45 +82,41 @@ class TestTime:
 
 ni_data = None
 data_log = []
+data_to_write = None
 last_pulse_data = [0, 0, 0, 0]
 pulse_data = [0, 0, 0, 0]
 pulse_reset = [0, 0, 0, 0]
 def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
+    global data_to_write
     global last_pulse_data
     global pulse_data
     global pulse_reset
     global ni_data
     global mb_data
     tod = datetime.now().strftime("%H:%M:%S")
+    time_data = [tod, test_time.test_time_min]
     # Try to read in data from ni hardware; otherwise return list of 0's
     if ni_modules is not None:
         ni_data = list(np.around(np.array(ni.read_daq()),1))
         data = mb_data[0][:3] + \
-        list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(last_pulse_data))) + \
-        [None if x > 4000 else x for x in ni_data[4:]]
-        data.insert(0, tod)
-        data.insert(1, test_time.test_time_min)
+        list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
+        [None if x > 4000 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
         data_log.append(data)
-        pulse_data = list(np.array(ni_data[:4])-np.array(pulse_reset))
+        pulse_data = list(np.array(ni_data[:4])-np.array(last_pulse_data))
         last_pulse_data = ni_data[:4]
     else:
         status.append("error reading from ni-DAQ")
-        data = list(np.zeros(25))
-        data.insert(0, tod)
-        data.insert(1, test_time.test_time_min)
+        data = list(np.zeros(23))
         data_log.append(data)
-    if test_time.timing_interval == 1: data_to_write = data_log[-1]
+    if test_time.timing_interval == 1: data_to_write = time_data.copy() + data.copy()
     else:
-        data_buf = np.array(data_log[-test_time.timing_interval:])
-        average_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,4,5,6,7,8]).mean()
-        sum_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,2,3,4]).sum()
-        data_to_write = data_log[-1][:2] + \                   # Timestamp and Test Time
-                        round(list(average_data[0:2]), 1) + \ # modbus Voltage and Watts
-                        data_log[-1][4:5] + \                 # modbus Wh
-                        list(sum_data[0:4]) + \               # ni pulse channels
-                        round(list(average_data[2:]), 1)      # ni ai and tc modules
-
-    print(len(data_to_write))
+        average_data = pd.DataFrame(data_log[-test_time.timing_interval:].copy()).drop(columns=[2,3,4,5,6]).mean()
+        # sum_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,2]).sum()
+        # _write = [*average_data[0:2], *data_log[-1][2:3], *sum_data[0:4], *average_data[2:]]
+        _write = [*average_data[0:2], *data_log[-1][2:7], *average_data[2:]]
+        data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,1) for item in _write]
+        print(data_to_write)
+    
 
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
@@ -138,19 +134,19 @@ def update_plot():
     if len(data_log) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+11], label=str(item), lw=0.5)
+            ax.plot(df[item+9], label=str(item), lw=0.5)
     elif len(data_log) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+11][-3600:-1], label=str(item), lw=0.5)
+            ax.plot(df[item+9][-3600:-1], label=str(item), lw=0.5)
     # Graph tc channel 0 if none selected
     else:
         if len(df) < 3600:
             ax.clear()
-            ax.plot(df[11], label="ambient", lw=0.5)
+            ax.plot(df[9], label="ambient", lw=0.5)
         else:
             ax.clear()
-            ax.plot(df[11][-3600:-1], label="ambient", lw=0.5)
+            ax.plot(df[9][-3600:-1], label="ambient", lw=0.5)
     
     # Format Plot   
     if graph_window is not None:
@@ -453,11 +449,11 @@ def update_data_window():
             if len(data_log[0]) > 30:
                 for column in range(4):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+9]))
             else:
                 for column in range(2):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+9]))
 
     
     if temp_avg_value_1a is not None:
@@ -482,9 +478,9 @@ def update_data_window():
     if pulse_model is not None:
         # Update the values in pulse table
         for i in range(4):
-            pulse_model.item(1, i).setText("Interval: {}".format(data_log[-1][i+2]))
+            pulse_model.item(1, i).setText("Interval: {}".format(pulse_data[i]))
         for i in range(4):
-            pulse_model.item(2, i).setText("Total: {}".format(pulse_data[i]))
+            pulse_model.item(2, i).setText("Total: {}".format(data_log[-1][i+3]))
 
     if index_label is not None:
         index_label.setText("Current Index = {}".format(current_index))
@@ -688,21 +684,21 @@ def update_values():
     time_label_value.setText("{:.2f}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if data_log[-1][11] == None:
+    if data_log[-1][9] == None:
         ambient_label_value.setText("Open")
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
 
-    elif data_log[-1][11] >=70 and data_log[-1][11] <80:
-        ambient_label_value.setText("{}".format(data_log[-1][11]))
+    elif 70 <= data_log[-1][9] < 80:
+        ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
-    elif data_log[-1][11] >=80:
-        ambient_label_value.setText("{}".format(data_log[-1][11]))
+    elif data_log[-1][9] >=80:
+        ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     else:
-        ambient_label_value.setText("{}".format(data_log[-1][11]))
+        ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(font_style))
     
@@ -788,7 +784,7 @@ timer.timeout.connect(update_plot)
 timer.timeout.connect(update_data_window)
 timer.timeout.connect(update_values)
 timer.timeout.connect(lambda: update_system_status(status[-1]))
-timer.timeout.connect(lambda: fu.write_data(data_log[-1], testing, test_time.time_to_write))
+timer.timeout.connect(lambda: fu.write_data(data_to_write, testing, test_time.time_to_write))
 # timer.timeout.connect(lambda: fu.write_data(data_log[-test_time.timing_interval:], testing, test_time.time_to_write))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                         Main Program Event Loop

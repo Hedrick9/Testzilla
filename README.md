@@ -27,8 +27,8 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Fix Spacing for widgets
 - [ ] Fix Window close issue
 - [ ] Logging extra channel specified by user (config page)
-- [ ] Averaging for intervals greater than 1 second
-- [ ] Logging data for intervals greater than 1 second
+- [x] Averaging for intervals greater than 1 second
+- [x] Logging data for intervals greater than 1 second
 - [ ] Choose specific channel numbers for graphing
 - [x] Swap upper and lower bound for graph range
 
