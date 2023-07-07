@@ -26,11 +26,12 @@ status = []
 testing = False # Test Status
 current_index = 0
 # Color Palette
-primary_color = "#000000" 
-secondary_color = "#2b2b2a"
-tri_color = "#121212"  
-font_color1 = "#ffffff"
-font_style = "Helvetica"
+PRIMARY_COLOR = "#000000" 
+SECONDARY_COLOR = "#2b2b2a"
+TRI_COLOR = "#121212"  
+FONT_COLOR1 = "#ffffff"
+# FONT_STYLE = "Helvetica" "Courier New" "Bahnschrift"
+FONT_STYLE = "Bahnschrift"
 start_time = QTime.currentTime()
 print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,12 +154,12 @@ def update_plot():
         ax.set_ylim([0, 200])
     else: 
         ax.set_ylim([None, None])
-    ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=font_color1)
-    ax.set_facecolor(tri_color)
-    ax.tick_params(labelbottom=False, labelcolor=font_color1, color="#ffffff", labelsize=8)
+    ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=FONT_COLOR1)
+    ax.set_facecolor(TRI_COLOR)
+    ax.tick_params(labelbottom=False, labelcolor=FONT_COLOR1, color="#ffffff", labelsize=8)
     ax.minorticks_on()
     #ax.spines[:].set_visible(False)#set_color("#ffffff")
-    ax.spines[:].set_color(secondary_color)
+    ax.spines[:].set_color(SECONDARY_COLOR)
     ax.spines[:].set_linewidth(0.25)
     ax.grid(which='major', linewidth=0.3, color="#03fcd3") #22ffff
     ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
@@ -215,6 +216,7 @@ def reset_():
 data_window = None
 tc_model = None
 pulse_model = None
+modbus_model = None
 temp_avg_value_1a = None
 temp_avg_value_1b = None
 temp_avg_value_1c = None
@@ -226,6 +228,7 @@ def show_data_window():
     global data_window
     global tc_model
     global pulse_model
+    global modbus_model
     global temp_avg_value_1a
     global temp_avg_value_1b
     global temp_avg_value_1c
@@ -236,7 +239,7 @@ def show_data_window():
     # Create a window for data view
     data_window = QWidget()
     data_window.setWindowTitle("Data")
-    data_window.setGeometry(1000, 100, 400, 700)
+    data_window.setGeometry(1000, 100, 425, 800)
     data_window.setStyleSheet("background-color: #0f0f0f;")
     
     layout = QVBoxLayout()
@@ -244,15 +247,20 @@ def show_data_window():
     # Add a labels to the window
     label1 = QLabel("Temperatures (F):", data_window)
     label1.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
-            font-family:{}; text-decoration: underline;".format(font_style))
+            font-family:{}; text-decoration: underline;".format(FONT_STYLE))
     
-    label2 = QLabel("Energy & Water:", data_window)
+    label2 = QLabel("Pulse Data:", data_window)
     label2.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
-            font-family:{}; text-decoration: underline;".format(font_style))
+            font-family:{}; text-decoration: underline;".format(FONT_STYLE))
 
-    label3 = QLabel("Analysis:", data_window)
+    label3 = QLabel("Modbus Data:", data_window)
     label3.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
-            font-family:{}; text-decoration: underline;".format(font_style))
+            font-family:{}; text-decoration: underline;".format(FONT_STYLE))
+
+
+    label4 = QLabel("Analysis:", data_window)
+    label4.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
+            font-family:{}; text-decoration: underline;".format(FONT_STYLE))
 
     
 #~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -264,21 +272,23 @@ def show_data_window():
             tc_model.setItem(row, column, item)
     table_view1 = QTableView()
     table_view1.horizontalHeader().setVisible(False)
+    # table_view1.verticalHeader().setDefaultSectionSize(300)
     table_view1.verticalHeader().setVisible(False)
+    table_view1.setFixedHeight(260)
     table_view1.setModel(tc_model)
-    table_view1.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+    table_view1.setStyleSheet(f"background-color: #0f0f0f; color: #ffffff; font: 12px; font-family:{FONT_STYLE};"\
                           "border-style: solid; border-width: 0 1px 1px 1px;")
     
     # Temp Average
     temp_avg_layout1 = QHBoxLayout()
     label_1a = QLabel(" Average of Temps  ")
-    label_1a.setStyleSheet("color: #ffffff; font: 14px;")
+    label_1a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout1.addWidget(label_1a)
     temp_avg_value_1a = QLineEdit()
     temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout1.addWidget(temp_avg_value_1a)
     label_1b = QLabel(" to ")
-    label_1b.setStyleSheet("color: #ffffff; font: 14px;")
+    label_1b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout1.addWidget(label_1b)
     temp_avg_value_1b = QLineEdit()
     temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 14px;")
@@ -290,13 +300,13 @@ def show_data_window():
 
     temp_avg_layout2 = QHBoxLayout()
     label_2a = QLabel(" Average of Temps  ")
-    label_2a.setStyleSheet("color: #ffffff; font: 14px;")
+    label_2a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout2.addWidget(label_2a)
     temp_avg_value_2a = QLineEdit()
     temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 14px;")
     temp_avg_layout2.addWidget(temp_avg_value_2a)
     label_2b = QLabel(" to ")
-    label_2b.setStyleSheet("color: #ffffff; font: 14px;")
+    label_2b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout2.addWidget(label_2b)
     temp_avg_value_2b = QLineEdit()
     temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 14px;")
@@ -338,11 +348,45 @@ def show_data_window():
     table_view2.verticalHeader().setVisible(False)
     table_view2.setModel(pulse_model)
     table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
-                          "border-style: solid; border-width: 0 1px 1px 1px;")
+            f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
 
-#~~~~~ Section 3: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~ Section 3: Modbus Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    modbus_model = QStandardItemModel(4, 3)
+    mb_item1 = QStandardItem("Avg. Voltage: NA")
+    mb_item2 = QStandardItem("Watts: NA")
+    mb_item3 = QStandardItem("Electric Energy: NA")
+    mb_item4 = QStandardItem("V_AN: NA")
+    mb_item5 = QStandardItem("V_BN: NA")
+    mb_item6 = QStandardItem("V_CN: NA")
+    mb_item7 = QStandardItem("V_AB: NA")
+    mb_item8 = QStandardItem("V_BC: NA")
+    mb_item9 = QStandardItem("V_AC: NA")
+    mb_item10 = QStandardItem("I_A: NA")
+    mb_item11 = QStandardItem("I_B: NA")
+    mb_item12 = QStandardItem("I_C: NA")
+
+    modbus_model.setItem(0, 0, mb_item1)
+    modbus_model.setItem(0, 1, mb_item2)
+    modbus_model.setItem(0, 2, mb_item3)
+    modbus_model.setItem(1, 0, mb_item4)
+    modbus_model.setItem(1, 1, mb_item5)
+    modbus_model.setItem(1, 2, mb_item6)
+    modbus_model.setItem(2, 0, mb_item7)
+    modbus_model.setItem(2, 1, mb_item8)
+    modbus_model.setItem(2, 2, mb_item9)
+    modbus_model.setItem(3, 0, mb_item10)
+    modbus_model.setItem(3, 1, mb_item11)
+    modbus_model.setItem(3, 2, mb_item12)
+
+    table_view3 = QTableView()
+    table_view3.horizontalHeader().setVisible(False)
+    table_view3.verticalHeader().setVisible(False)
+    table_view3.setModel(modbus_model)
+    table_view3.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+            f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
+#~~~~~~ Section 4: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     index_label = QLabel("Current Index = NA", data_window) 
-    index_label.setStyleSheet("color: #ffffff; font: 14px; font-family:{};".format(font_style))
+    index_label.setStyleSheet("color: #ffffff; font: 14px; font-family:{};".format(FONT_STYLE))
 
     # Add spacers for layout styling
     spacer_item = QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -357,7 +401,11 @@ def show_data_window():
     layout.addWidget(label2)
     layout.addItem(spacer_item)
     layout.addWidget(table_view2)
+    layout.addItem(spacer_item)
     layout.addWidget(label3)
+    layout.addItem(spacer_item)
+    layout.addWidget(table_view3)
+    layout.addWidget(label4)
     layout.addWidget(index_label)
 
     data_window.setLayout(layout)
@@ -482,6 +530,21 @@ def update_data_window():
         for i in range(4):
             pulse_model.item(2, i).setText("Total: {}".format(data_log[-1][i+3]))
 
+    if modbus_model is not None:
+        # Update the values in modbus table
+        modbus_model.item(0, 0).setText(f"Avg. Voltage: {mb_data[0][0]}")
+        modbus_model.item(0, 1).setText(f"Watts: {mb_data[0][1]}")
+        modbus_model.item(0, 2).setText(f"Electrical Energy: {mb_data[0][2]}")
+        modbus_model.item(1, 0).setText(f"V_AN: {mb_data[0][3]}")
+        modbus_model.item(1, 1).setText(f"V_BN: {mb_data[0][4]}")
+        modbus_model.item(1, 2).setText(f"V_CN: {mb_data[0][5]}")
+        modbus_model.item(2, 0).setText(f"V_AB: {mb_data[0][6]}")
+        modbus_model.item(2, 1).setText(f"V_BC: {mb_data[0][7]}")
+        modbus_model.item(2, 2).setText(f"V_CA: {mb_data[0][8]}")
+        modbus_model.item(3, 0).setText(f"I_A: {mb_data[0][9]}")
+        modbus_model.item(3, 1).setText(f"I_B: {mb_data[0][10]}")
+        modbus_model.item(3, 2).setText(f"I_C: {mb_data[0][11]}")
+
     if index_label is not None:
         index_label.setText("Current Index = {}".format(current_index))
            
@@ -526,13 +589,13 @@ header_layout.addWidget(main_logo)
 time_layout = QVBoxLayout()
 time_label = QLabel("TEST TIME:")
 time_label.setStyleSheet("color: #ffffff; font: 30px; font-weight: bold; \
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
 time_label.setPixmap(QPixmap("photos/test_time1.png"))
 time_label.setAlignment(Qt.AlignCenter)
 time_layout.addWidget(time_label)
 time_label_value = QLabel("0.0")
 time_label_value.setStyleSheet("color: #ffffff; font: 30px; font-weight:bold;\
-            font-family:{};".format(font_style)) #  
+            font-family:{};".format(FONT_STYLE)) #  
 time_label_value.setAlignment(Qt.AlignCenter)
 time_layout.addWidget(time_label_value)
 spacer_item = QSpacerItem(10, 60, QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -543,24 +606,24 @@ header_layout.addLayout(time_layout)
 status_layout = QVBoxLayout()
 status_label = QLabel("Status:")
 status_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
 status_label.setPixmap(QPixmap("photos/status1.png"))
 status_label.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(status_label)
 status_indicator = QLabel("Not Recording")
 status_indicator.setFixedSize(250, 27)
 status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
-        color: {}; font-weight: bold; border-style: solid;".format(font_color1))
+        color: {}; font-weight: bold; border-style: solid;".format(FONT_COLOR1))
 status_indicator.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(status_indicator)
 ambient_label = QLabel("Ambient:")
 ambient_label.setPixmap(QPixmap("photos/ambient1.png"))
 ambient_label.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
 ambient_label.setAlignment(Qt.AlignCenter)
 ambient_label_value = QLabel("NA")
 ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight: bold; \
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
 ambient_label_value.setAlignment(Qt.AlignCenter)
 status_layout.addWidget(ambient_label)
 status_layout.addWidget(ambient_label_value)
@@ -580,10 +643,9 @@ main_layout.addWidget(border_line1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a menu bar object
 menubar = main_window.menuBar()
-menubar.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-        "font-family:{}; border-style: solid;"\
-        "border-width: 0 1px 1px 1px;".format(font_style)) #; font-weight: bold
-
+menubar.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+        f"font-family:{FONT_STYLE}; border-style: solid;"\
+        "border-width: 0 1px 1px 1px;")
 # Add a File menu
 file_menu = menubar.addMenu("File")
 # Add an action to the File menu
@@ -687,20 +749,20 @@ def update_values():
     if data_log[-1][9] == None:
         ambient_label_value.setText("Open")
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
 
     elif 70 <= data_log[-1][9] < 80:
         ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
     elif data_log[-1][9] >=80:
         ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
     else:
         ambient_label_value.setText("{}".format(data_log[-1][9]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
-            font-family:{};".format(font_style))
+            font-family:{};".format(FONT_STYLE))
     
     global current_index
     current_index += 1
@@ -709,13 +771,13 @@ def update_values():
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set push button styles
-button_style1 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+button_style1 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
                 "QPushButton:hover {background-color: #225c40;}" \
                 "QPushButton:pressed {background-color: #777777;}"
-button_style2 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+button_style2 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
                 "QPushButton:hover {background-color: #b8494d;}" \
                 "QPushButton:pressed {background-color: #777777;}"
-button_style3 =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
+button_style3 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
                 "QPushButton:hover {background-color: #555555;}" \
                 "QPushButton:pressed {background-color: #777777;}"
 # Create a "Start" push button and its slot for handling button click event
@@ -737,10 +799,10 @@ reset_button.clicked.connect(reset_)
 #                           Setup Matplotlib Graph
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a Matplotlib figure and canvas
-fig = plt.Figure(facecolor=(primary_color))
+fig = plt.Figure(facecolor=(PRIMARY_COLOR))
 canvas = FigureCanvas(fig)
 ax = fig.add_subplot(111)
-ax.set_facecolor(primary_color)
+ax.set_facecolor(PRIMARY_COLOR)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Layout Organization

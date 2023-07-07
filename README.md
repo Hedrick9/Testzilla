@@ -31,6 +31,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Logging data for intervals greater than 1 second
 - [ ] Choose specific channel numbers for graphing
 - [x] Swap upper and lower bound for graph range
+- [x] Create table for modbus data in data window
 
 
 
