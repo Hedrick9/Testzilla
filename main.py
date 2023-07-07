@@ -116,8 +116,6 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
         # _write = [*average_data[0:2], *data_log[-1][2:3], *sum_data[0:4], *average_data[2:]]
         _write = [*average_data[0:2], *data_log[-1][2:7], *average_data[2:]]
         data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,1) for item in _write]
-        print(data_to_write)
-    
 
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
