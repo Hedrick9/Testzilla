@@ -32,8 +32,32 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Choose specific channel numbers for graphing
 - [x] Swap upper and lower bound for graph range
 - [x] Create table for modbus data in data window
+- [ ] Average data using lists?
 
-
+## Software Requirements:
+### NI MAX and related drivers: 
+***NI MAX:***
+```markdown
+https://knowledge.ni.com/KnowledgeArticleDetails?id=kA03q000000YGQwCAO&l=en-US
+```
+***NI DAQ-mx:***
+```markdown
+https://www.ni.com/en-us/support/downloads/drivers/download.ni-daq-mx.html#480879
+```
+### Python 3.11 or later: 
+```markdown
+https://www.python.org/
+```
+***Python Dependencies***
+- pandas
+- matplotlib
+- nidaqmx
+- PySide6
+- pymodbus
+- pyserial
+```Powershell
+pip install pandas matplotlib nidaqmx PySide6 pymodbus pyserial
+```
 
 ```python
 test = "This is a test"
