@@ -12,6 +12,7 @@
 from pymodbus.client import ModbusSerialClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder 
+import time
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                   Initialize modbus and connect to client
@@ -114,7 +115,8 @@ def read_registers(client, starting_register, num_registers, device_address=1, *
             # Close the Modbus connection
             client.close()
     else:
-        print("Failed to connect to the Shark 200 meter.")
+        time.sleep(1) # wait 1 second before retesting signal
+        print("Failed to read from Shark 200 meter.")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Conversions
@@ -169,15 +171,20 @@ def data_stream(client, stack):
     """
     Read modbus data continuously. Function designed for threading.
     """
-    while True:
-        mb_data = list(get_all(client))
-        if len(stack) > 0:
-            stack.pop(0)
-        stack.append(mb_data)
+    if client.connect():
+        while True:
+            try:
+                mb_data = list(get_all(client))
+                if len(stack) > 0:
+                    stack.pop(0)
+                stack.append(mb_data)
+            except TypeError:
+                pass
+            except Exception as e:
+                print(e)
 
 
 if __name__ == "__main__":
-    import time
     client = init()
     write_(client, 20000, 5555, device_address=1)
     while True:
@@ -188,6 +195,3 @@ if __name__ == "__main__":
         print(f"Process Time: {process_time}")
 
     # a = read_registers(client, 999, 2, 1, 1499, 2)
-
-
-    

@@ -33,7 +33,6 @@ FONT_COLOR1 = "#ffffff"
 # FONT_STYLE = "Helvetica" "Courier New" "Bahnschrift"
 FONT_STYLE = "Bahnschrift"
 start_time = QTime.currentTime()
-print(start_time)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,7 +106,7 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
         last_pulse_data = ni_data[:4]
     else:
         status.append("error reading from ni-DAQ")
-        data = list(np.zeros(23))
+        data = list(np.zeros(25))
         data_log.append(data)
     if test_time.timing_interval == 1: data_to_write = time_data.copy() + data.copy()
     else:
@@ -161,8 +160,7 @@ def update_plot():
     ax.spines[:].set_linewidth(0.25)
     ax.grid(which='major', linewidth=0.3, color="#03fcd3") #22ffff
     ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
-    # Call canvas.draw() to update the plot on the canvas
-    canvas.draw()
+    canvas.draw() # update plot
 
 #~~~~~~~~~ Slot function for handling status update in status bar ~~~~~~~~~~~~~
 def update_system_status(status):
