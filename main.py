@@ -147,7 +147,10 @@ def update_plot():
     
     # Format Plot   
     if graph_window is not None:
-        ax.set_ylim([0, 200])
+        try:
+            ax.set_ylim([graph_range[-1][1], graph_range[-1][0]])
+        except Exception as e:
+            pass
     else: 
         ax.set_ylim([None, None])
     ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=FONT_COLOR1)
@@ -414,45 +417,47 @@ def show_graph_window():
 
 #~~~~~~~~~~~~~~~~~~~~~~~~ Display Graph Setup Window  ~~~~~~~~~~~~~~~~~~~~~~~~~
 graph_window = None
+graph_range = None
 def set_graph_window():
     global graph_window
+    global graph_range
 
     graph_window = QWidget()
     graph_window.setWindowTitle("Setup Graph")
-    graph_window.setGeometry(120, 150, 200, 200)
+    graph_window.setGeometry(400, 100, 350, 200)
     graph_window.setStyleSheet("background-color: #0f0f0f;")
+
+    graph_range = []
     
     layout = QVBoxLayout()
     layout.setSpacing(0)
 
     label1 = QLabel("Set Y Upper Bound")
     label1.setStyleSheet("color: #ffffff; font: 14px;")
-    entry1 = QLineEdit()
-    entry1.setStyleSheet("color: #ffffff; font: 14px;")
+    upper_bound_entry = QLineEdit()
+    upper_bound_entry.setStyleSheet("color: #ffffff; font: 14px;")
     label2 = QLabel("Set Y Lower Bound")
     label2.setStyleSheet("color: #ffffff; font: 14px;")
-    entry2 = QLineEdit()
-    entry2.setStyleSheet("color: #ffffff; font: 14px;")
+    lower_bound_entry = QLineEdit()
+    lower_bound_entry.setStyleSheet("color: #ffffff; font: 14px;")
     button_style =  "QPushButton {background-color: #2b2b2b; color: #ffffff;}" \
                 "QPushButton:hover {background-color: #555555;}" \
                 "QPushButton:pressed {background-color: #777777;}"
     set_button = QPushButton("Set Range")
     set_button.setStyleSheet(button_style)
-    auto_button = QPushButton("Autoscale")
-    auto_button.setStyleSheet(button_style)
+    # set_button.clicked.connect(lambda: print(f"{upper_bound_entry.text()} and {lower_bound_entry.text()}"))
+    set_button.clicked.connect(lambda: graph_range.append((int(upper_bound_entry.text()), int(lower_bound_entry.text()),)))
 
     layout.addWidget(label1)
-    layout.addWidget(entry1)
+    layout.addWidget(upper_bound_entry)
     layout.addWidget(label2)
-    layout.addWidget(entry2)
+    layout.addWidget(lower_bound_entry)
     layout.addWidget(set_button)
-    layout.addWidget(auto_button)
 
     graph_window.setLayout(layout)
     graph_window.show()
 #~~~~~~~~~~~~~~~~~~~~~~~~ Display Config Setup Window  ~~~~~~~~~~~~~~~~~~~~~~~~
 def handle_time_selection(index):
-    selected_option = index
     time_dict = {0: 1, 1: 5, 2: 30, 3: 60}
     test_time.timing_interval = time_dict[index]
 
