@@ -156,7 +156,7 @@ def init_daq():
    
     except Exception as e:
         print("Unable to Initialize NI-DAQ")
-        return None
+        return 0
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Read Data from tasks

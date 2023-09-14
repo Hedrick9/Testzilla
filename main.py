@@ -96,7 +96,7 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
     tod = datetime.now().strftime("%H:%M:%S")
     time_data = [tod, test_time.test_time_min]
     # Try to read in data from ni hardware; otherwise return list of 0's
-    if ni_modules is not None:
+    if ni_modules > 0:
         ni_data = list(np.around(np.array(ni.read_daq()),1))
         data = mb_data[0][:3] + \
         list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
@@ -119,7 +119,6 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
     # Update the plot with new data
-    #data = pd.read_csv(file_name)
     df = pd.DataFrame(data_log)
     # Create list of tc channels to graph    
     if graph_menu is not None:
@@ -182,6 +181,7 @@ def start_test():
     status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
         color: #ffffff; font-weight: bold;")
     status_indicator.setText("Recording")
+    test_file_label.setText(f"File Name: {fu.file_name}")
     start_time = QTime.currentTime()
     test_time.reset()
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
@@ -522,9 +522,9 @@ def update_data_window():
     if pulse_model is not None:
         # Update the values in pulse table
         for i in range(4):
-            pulse_model.item(1, i).setText("Interval: {}".format(pulse_data[i]))
+            pulse_model.item(1, i).setText(f"Interval: {pulse_data[i]:.2f}")
         for i in range(4):
-            pulse_model.item(2, i).setText("Total: {}".format(data_log[-1][i+3]))
+            pulse_model.item(2, i).setText(f"Total: {data_log[-1][i+3]:.2f}")
 
     if modbus_model is not None:
         # Update the values in modbus table
@@ -548,7 +548,7 @@ def update_data_window():
 #                             Setup Main UI 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create the PySide6 application instance
-app = QApplication(sys.argv)
+app = QApplication()
 
 # Set the window icon
 app.setWindowIcon(QIcon("photos/tz-icon.png")) 
@@ -651,7 +651,7 @@ exit_action.triggered.connect(main_window.close)
 file_menu.addAction(exit_action)
 # Add an action for new test file
 new_test_action = QAction("New Test", main_window)
-new_test_action.triggered.connect(fu.file_setup)
+new_test_action.triggered.connect(lambda: fu.file_setup(testing, ni_modules))
 file_menu.addAction(new_test_action)
 # Add an action for copying test file
 copy_file_action = QAction("Create File Copy", main_window)
@@ -676,7 +676,7 @@ data_menu.addAction(view_data_action)
 # Add a Graph menu
 graph_menu = QMenu("Graph", menubar)
 tc_items = []
-for i in range(16):
+for i in range(ni_modules*16):
     item = QAction("Temp {}".format(i), graph_menu, checkable=True)
     tc_items.append(item)
 menubar.addMenu(graph_menu)
@@ -689,7 +689,7 @@ graph_menu_action.setFont(g_font)
 graph_menu.triggered.connect(show_graph_window)
 graph_menu.addAction(graph_menu_action)
 
-for i in range(16):
+for i in range(ni_modules*16):
     graph_menu.addAction(tc_items[i])
 
 set_graph_action = QAction("Set Graph Range")
@@ -723,7 +723,12 @@ system_status_label = QLabel("")
 system_status_label.setStyleSheet("color: #ffffff;")
 status_bar.addPermanentWidget(system_status_label)
 
-# Add a label to the status bar
+# Add a label to the status bar for system status updates
+test_file_label = QLabel("")
+test_file_label.setStyleSheet("color: #ffffff;")
+status_bar.addPermanentWidget(test_file_label)
+
+# Add a label to the status bar for elapsed time
 status_bar_label = QLabel("Elapsed Time: 00:00:00")
 status_bar_label.setStyleSheet("color: #ffffff;")
 status_bar.addPermanentWidget(status_bar_label)
