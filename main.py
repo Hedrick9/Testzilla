@@ -187,6 +187,8 @@ def start_test():
     test_file_label.setText(f"File Name: {fu.file_name}")
     start_time = QTime.currentTime()
     test_time.reset()
+    data_to_write[1] = 0.0 # resets the clock and writes a t0 timestamp 
+    fu.write_data(data_to_write, testing, True)
     timer.start(1000)  # Start the timer to update the plot every 1000 milliseconds (1 second)
 
 #~~~~~~~~~ Slot function for handling stop button click event ~~~~~~~~~~~~~~~~~
@@ -209,6 +211,8 @@ def reset_():
     pulse_reset = pulse_data
     start_time = QTime.currentTime()
     test_time.reset()
+    data_to_write[1] = 0.0 # resets the clock and writes a t0 timestamp 
+    fu.write_data(data_to_write, testing, True)
     timer.start(1000)
 
 #~~~~~~~~~~~~~~~~~ Function for Initial Data Window Display ~~~~~~~~~~~~~~~~~~~

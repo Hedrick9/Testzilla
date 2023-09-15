@@ -4,7 +4,7 @@ An application that provides an intuitive user interface for laboratory testing.
 ## Testzilla TODO List:
 - [x] Fix format of test time
 - [x] Fix graph config: slect list of items
-- [ ] Adjust plot scale for graph - Include autoscale option
+- [x] Add custom graph scale feature for y-axis
 - [x] Fix graphing for null/open channels
 - [x] Allow for new file creation
 - [x] Work on config page: Time sampling
@@ -29,10 +29,11 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Logging extra channel specified by user (config page)
 - [x] Averaging for intervals greater than 1 second
 - [x] Logging data for intervals greater than 1 second
-- [ ] Choose specific channel numbers for graphing
 - [x] Swap upper and lower bound for graph range
 - [x] Create table for modbus data in data window
 - [ ] Average data using lists?
+- [ ] Add fry test capability
+- [ ] Add burger test capability
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
