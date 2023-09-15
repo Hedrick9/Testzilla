@@ -21,7 +21,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Add ambient channel to Main window
 - [ ] Rename channel ability
 - [x] Correct reset timing
-- [ ] Correct missed data read Error (Need testing)
+- [x] Add t0 timestamp for start test and resets
 - [x] Rename default temp channel 0
 - [x] Copy data feature
 - [x] Fix Spacing for widgets
