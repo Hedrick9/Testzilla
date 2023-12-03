@@ -25,15 +25,15 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Rename default temp channel 0
 - [x] Copy data feature
 - [x] Fix Spacing for widgets
-- [ ] Fix Window close issue
+- [x] Fix Window close issue
 - [ ] Logging extra channel specified by user (config page)
 - [x] Averaging for intervals greater than 1 second
 - [x] Logging data for intervals greater than 1 second
 - [x] Swap upper and lower bound for graph range
 - [x] Create table for modbus data in data window
-- [ ] Average data using lists?
 - [ ] Add fry test capability
 - [ ] Add burger test capability
+- [ ] Test Analog input reading w/ RH meter (avg various readings?)
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
