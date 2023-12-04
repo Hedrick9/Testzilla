@@ -101,19 +101,17 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
         data = mb_data[0][:3] + \
         list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
         [None if x > 4000 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
-        data_log.append(data)
+        data_log.append(time_data.copy()+data)
         pulse_data = list(np.array(ni_data[:4])-np.array(last_pulse_data))
         last_pulse_data = ni_data[:4]
     else:
         status.append("error reading from ni-DAQ")
         data = list(np.zeros(25))
-        data_log.append(data)
+        data_log.append(time_data.copy()+data)
     if test_time.timing_interval == 1: data_to_write = time_data.copy() + data.copy()
     else:
-        average_data = pd.DataFrame(data_log[-test_time.timing_interval:].copy()).drop(columns=[2,3,4,5,6]).mean()
-        # sum_data = pd.DataFrame(data_log[-test_time.timing_interval:]).drop(columns=[0,1,2]).sum()
-        # _write = [*average_data[0:2], *data_log[-1][2:3], *sum_data[0:4], *average_data[2:]]
-        _write = [*average_data[0:2], *data_log[-1][2:7], *average_data[2:]]
+        average_data = pd.DataFrame(data_log[-test_time.timing_interval:].copy()).drop(columns=[0,1,4,5,6,7,8]).mean()
+        _write = [*average_data[0:2], *data_log[-1][4:9], *average_data[2:]]
         data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,1) for item in _write]
 
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,26 +122,26 @@ def update_plot():
     if graph_menu is not None:
         tc_list_ = [tc.text() for tc in graph_menu.actions() if tc.isCheckable() and tc.isChecked()]
         tc_list = [int(name.split()[1]) for name in tc_list_]
-        while len(tc_list) > 9:
+        while len(tc_list) > 11:
             tc_list.remove(tc_list[-1])
     
     # Graph tc channels in list
     if len(data_log) < 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+9], label=str(item), lw=0.5)
+            ax.plot(df[item+11], label=str(item), lw=0.5)
     elif len(data_log) >= 3600 and len(tc_list)>0:
         ax.clear()
         for item in tc_list:
-            ax.plot(df[item+9][-3600:-1], label=str(item), lw=0.5)
+            ax.plot(df[item+11][-3600:-1], label=str(item), lw=0.5)
     # Graph tc channel 0 if none selected
     else:
         if len(df) < 3600:
             ax.clear()
-            ax.plot(df[9], label="ambient", lw=0.5)
+            ax.plot(df[11], label="ambient", lw=0.5)
         else:
             ax.clear()
-            ax.plot(df[9][-3600:-1], label="ambient", lw=0.5)
+            ax.plot(df[11][-3600:-1], label="ambient", lw=0.5)
     
     # Format Plot   
     if graph_window is not None:
@@ -177,8 +175,10 @@ def start_test():
     global pulse_data
     global pulse_reset
     global status_indicator
+    global current_index
     testing = True
     data_log = []
+    current_index=0
     pulse_reset = pulse_data
     status.append("testing in progress...")
     status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
@@ -216,30 +216,22 @@ def reset_():
     timer.start(1000)
 
 #~~~~~~~~~~~~~~~~~ Function for Initial Data Window Display ~~~~~~~~~~~~~~~~~~~
-data_window = None
-tc_model = None
-pulse_model = None
-modbus_model = None
-temp_avg_value_1a = None
-temp_avg_value_1b = None
-temp_avg_value_1c = None
-temp_avg_value_2a = None
-temp_avg_value_2b = None
-temp_avg_value_2c = None
-index_label = None
+data_window,tc_model,pulse_model,modbus_model,index_label,\
+temp_avg_value_1a,temp_avg_value_1b,temp_avg_value_1c,\
+temp_avg_value_2a,temp_avg_value_2b,temp_avg_value_2c,\
+er_time_label,energy_rate_label,start_index_input,end_index_input,\
+gcf_input,hhv_input,meter_selection = [None for item in range(18)]
 def show_data_window():
-    global data_window
-    global tc_model
-    global pulse_model
-    global modbus_model
-    global temp_avg_value_1a
-    global temp_avg_value_1b
-    global temp_avg_value_1c
-    global temp_avg_value_2a
-    global temp_avg_value_2b
-    global temp_avg_value_2c
-    global index_label
-    # Create a window for data view
+    global data_window, tc_model, pulse_model, modbus_model, index_label, \
+           temp_avg_value_1a, temp_avg_value_1b, temp_avg_value_1c, \
+           temp_avg_value_2a, temp_avg_value_2b, temp_avg_value_2c, \
+           er_time_label,energy_rate_label,start_index_input,end_index_input,\
+           gcf_input,hhv_input,meter_selection
+    # spacer item function to prevent program crash bug
+    def spacer_():
+        return QSpacerItem(10, 10, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+   # Create a window for data view
     data_window = QWidget()
     data_window.setWindowTitle("Data")
     data_window.setGeometry(1000, 100, 425, 800)
@@ -288,13 +280,13 @@ def show_data_window():
     label_1a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout1.addWidget(label_1a)
     temp_avg_value_1a = QLineEdit()
-    temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 14px;")
+    temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
     temp_avg_layout1.addWidget(temp_avg_value_1a)
     label_1b = QLabel(" to ")
     label_1b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout1.addWidget(label_1b)
     temp_avg_value_1b = QLineEdit()
-    temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 14px;")
+    temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 14px; border: none; border-bottom:1px solid white;")
     temp_avg_layout1.addWidget(temp_avg_value_1b)
     temp_avg_value_1c = QLabel(" = NA")
     temp_avg_value_1c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
@@ -306,13 +298,13 @@ def show_data_window():
     label_2a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout2.addWidget(label_2a)
     temp_avg_value_2a = QLineEdit()
-    temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 14px;")
+    temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
     temp_avg_layout2.addWidget(temp_avg_value_2a)
     label_2b = QLabel(" to ")
     label_2b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     temp_avg_layout2.addWidget(label_2b)
     temp_avg_value_2b = QLineEdit()
-    temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 14px;")
+    temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
     temp_avg_layout2.addWidget(temp_avg_value_2b)
     temp_avg_value_2c = QLabel(" = NA")
     temp_avg_value_2c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
@@ -395,30 +387,37 @@ def show_data_window():
     start_index_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     index_layout.addWidget(start_index_label)
     start_index_input = QLineEdit()
-    start_index_input.setStyleSheet("color: #ffffff; font: 14px;")
+    start_index_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
     index_layout.addWidget(start_index_input)
     end_index_label = QLabel(" End Index = ")
     end_index_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     index_layout.addWidget(end_index_label)
     end_index_input = QLineEdit()
-    end_index_input.setStyleSheet("color: #ffffff; font: 14px;")
+    end_index_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
     index_layout.addWidget(end_index_input)
      
     er_time_label = QLabel(" Start Time = NA     |     End Time = NA  ")
     er_time_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE};")
-  
+    
+    meter_selection = QComboBox()
+    meter_selection.setStyleSheet("color: #ffffff; font: 14px;")
+    meter_selection.addItem("Gas Meter")
+    meter_selection.addItem("120V Meter")
+    meter_selection.addItem("208V Meter")
+    # meter_selection.currentIndexChanged.connect(handle_meter_selection)
+
     energy_rate_layout = QHBoxLayout()
-    hhv_label = QLabel(" HHV =  ")
+    hhv_label = QLabel(" HHV =            ")
     hhv_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     energy_rate_layout.addWidget(hhv_label)
-    hhv_input = QLineEdit()
-    hhv_input.setStyleSheet("color: #ffffff; font: 14px;")
+    hhv_input = QLineEdit("1")
+    hhv_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
     energy_rate_layout.addWidget(hhv_input)
-    gcf_label = QLabel(" GCF = ")
+    gcf_label = QLabel(" GCF =          ")
     gcf_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
     energy_rate_layout.addWidget(gcf_label)
-    gcf_input = QLineEdit()
-    gcf_input.setStyleSheet("color: #ffffff; font: 14px;")
+    gcf_input = QLineEdit("1")
+    gcf_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
     energy_rate_layout.addWidget(gcf_input)
     
     energy_rate_label = QLabel(" Energy Rate = ")
@@ -436,9 +435,12 @@ def show_data_window():
     layout.addWidget(table_view3)
     layout.addWidget(label4)
     layout.addWidget(index_label)
+    layout.addWidget(meter_selection)
     layout.addLayout(index_layout)
+    layout.addItem(spacer_())
     layout.addWidget(er_time_label)
     layout.addLayout(energy_rate_layout)
+    layout.addItem(spacer_())
     layout.addWidget(energy_rate_label)
 
     data_window.setLayout(layout)
@@ -532,11 +534,11 @@ def update_data_window():
             if len(data_log[0]) > 30:
                 for column in range(4):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+9]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
             else:
                 for column in range(2):
                     index = (row)+(column*8)
-                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+9]))
+                    tc_model.item(row, column).setText("Temp {}:    {}".format(index, data_log[-1][index+11]))
 
     
     if temp_avg_value_1a is not None:
@@ -563,7 +565,7 @@ def update_data_window():
         for i in range(4):
             pulse_model.item(1, i).setText(f"Interval: {pulse_data[i]:.2f}")
         for i in range(4):
-            pulse_model.item(2, i).setText(f"Total: {data_log[-1][i+3]:.2f}")
+            pulse_model.item(2, i).setText(f"Total: {data_log[-1][i+5]:.2f}")
 
     if modbus_model is not None:
         # Update the values in modbus table
@@ -582,6 +584,22 @@ def update_data_window():
 
     if index_label is not None:
         index_label.setText("Current Index = {}".format(current_index))
+        try:
+            st_i = int(start_index_input.text())
+            et_i = int(end_index_input.text())
+            hhv = int(hhv_input.text())
+            gcf = float(gcf_input.text())
+            ti = data_log[st_i][1]
+            tf = data_log[et_i][1]
+            er_time_label.setText(f" Start Time = {ti}     |     End Time = {tf}")
+            meter_ix = {"Gas Meter": 6, "120V Meter": 5, "208V Meter":4}[meter_selection.currentText()]
+            er_calc = (data_log[et_i][meter_ix] - data_log[st_i][meter_ix])*hhv*gcf/((tf-ti)/60)
+            energy_rate_label.setText(f" Energy Rate = {round(er_calc,1)}")
+        except ValueError as e:
+            pass
+        except IndexError as e:
+            pass
+
            
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                             Setup Main UI 
@@ -786,21 +804,21 @@ def update_values():
     time_label_value.setText("{:.2f}".format(test_time.test_time_min))
 #~~~~ Update Ambient Temp Label ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if data_log[-1][9] == None:
+    if data_log[-1][11] == None:
         ambient_label_value.setText("Open")
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(FONT_STYLE))
 
-    elif 70 <= data_log[-1][9] < 80:
-        ambient_label_value.setText("{}".format(data_log[-1][9]))
+    elif 70 <= data_log[-1][11] < 80:
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
             font-family:{};".format(FONT_STYLE))
-    elif data_log[-1][9] >=80:
-        ambient_label_value.setText("{}".format(data_log[-1][9]))
+    elif data_log[-1][11] >=80:
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
             font-family:{};".format(FONT_STYLE))
     else:
-        ambient_label_value.setText("{}".format(data_log[-1][9]))
+        ambient_label_value.setText("{}".format(data_log[-1][11]))
         ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
             font-family:{};".format(FONT_STYLE))
     

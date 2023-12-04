@@ -17,7 +17,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Add 2 tc module capability - detect how many modules available and scale appropriately?
 - [x] Fix timing and time data
 - [x] Averaging for temperature readings 
-- [ ] Averaging for pulse data
+- [x] Energy Rate calculator
 - [x] Add ambient channel to Main window
 - [ ] Rename channel ability
 - [x] Correct reset timing
