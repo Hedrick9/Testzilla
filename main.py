@@ -29,6 +29,7 @@ current_index = 0
 PRIMARY_COLOR = "#000000" 
 SECONDARY_COLOR = "#0f0f0f"
 TRI_COLOR = "#121212"  
+BUTTON_COLOR = "#2b2b2b" 
 FONT_COLOR1 = "#ffffff"
 # FONT_STYLE = "Helvetica" "Courier New" "Bahnschrift"
 FONT_STYLE = "Bahnschrift"
@@ -769,8 +770,8 @@ config_menu.addAction(load_config_action)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a status bar object
 status_bar = QStatusBar()
-status_bar.setStyleSheet(f"QStatusBar {{background-color: {SECONDARY_COLOR}; color: #ffffff; font: 10px;"\
-"border-style: solid; border-width: 1px 1px 1px 1px; border-color: white;}}")
+status_bar.setStyleSheet(f"QStatusBar {{background-color: {SECONDARY_COLOR};\
+color: #ffffff; font: 10px;border-style: solid; border-width: 1px 1px 1px 1px; border-color: white;}}")
 
 # Add the status bar to the main window
 main_window.setStatusBar(status_bar)
@@ -829,15 +830,15 @@ def update_values():
 #                               Push Buttons
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set push button styles
-button_style1 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
-                "QPushButton:hover {background-color: #225c40;}" \
-                "QPushButton:pressed {background-color: #777777;}"
-button_style2 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
-                "QPushButton:hover {background-color: #b8494d;}" \
-                "QPushButton:pressed {background-color: #777777;}"
-button_style3 =  "QPushButton {background-color: #2b2b2b; color: #ffffff; font-family:" f"{FONT_STYLE}" "}" \
-                "QPushButton:hover {background-color: #555555;}" \
-                "QPushButton:pressed {background-color: #777777;}"
+button_style1 = f"QPushButton {{background-color: {BUTTON_COLOR}; color: #ffffff; font-family:{FONT_STYLE}}}\
+                  QPushButton:hover {{background-color: #225c40;}}\
+                  QPushButton:pressed {{background-color: #777777;}}"
+button_style2 = f"QPushButton {{background-color: {BUTTON_COLOR}; color: #ffffff; font-family:{FONT_STYLE}}}\
+                  QPushButton:hover {{background-color: #b8494d;}}\
+                  QPushButton:pressed {{background-color: #777777;}}"
+button_style3 = f"QPushButton {{background-color: {BUTTON_COLOR}; color: #ffffff; font-family:{FONT_STYLE}}}\
+                  QPushButton:hover {{background-color: #555555;}}\
+                  QPushButton:pressed {{background-color: #777777;}}"
 # Create a "Start" push button and its slot for handling button click event
 start_button = QPushButton("Start")
 start_button.setStyleSheet(button_style1)
