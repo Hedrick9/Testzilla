@@ -27,7 +27,7 @@ testing = False # Test Status
 current_index = 0
 # Color Palette
 PRIMARY_COLOR = "#000000" 
-SECONDARY_COLOR = "#2b2b2a"
+SECONDARY_COLOR = "#0f0f0f"
 TRI_COLOR = "#121212"  
 FONT_COLOR1 = "#ffffff"
 # FONT_STYLE = "Helvetica" "Courier New" "Bahnschrift"
@@ -156,7 +156,7 @@ def update_plot():
     ax.tick_params(labelbottom=False, labelcolor=FONT_COLOR1, color="#ffffff", labelsize=8)
     ax.minorticks_on()
     #ax.spines[:].set_visible(False)#set_color("#ffffff")
-    ax.spines[:].set_color(SECONDARY_COLOR)
+    ax.spines[:].set_color("#2b2b2a")
     ax.spines[:].set_linewidth(0.25)
     ax.grid(which='major', linewidth=0.3, color="#03fcd3") #22ffff
     ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
@@ -235,7 +235,7 @@ def show_data_window():
     data_window = QWidget()
     data_window.setWindowTitle("Data")
     data_window.setGeometry(1000, 100, 425, 800)
-    data_window.setStyleSheet("background-color: #0f0f0f;")
+    data_window.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
     
     layout = QVBoxLayout()
     layout.setSpacing(0)
@@ -271,8 +271,8 @@ def show_data_window():
     table_view1.verticalHeader().setVisible(False)
     table_view1.setFixedHeight(260)
     table_view1.setModel(tc_model)
-    table_view1.setStyleSheet(f"background-color: #0f0f0f; color: #ffffff; font: 12px; font-family:{FONT_STYLE};"\
-                          "border-style: solid; border-width: 0 1px 1px 1px;")
+    table_view1.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px; font-family:{FONT_STYLE};"\
+                          "border-style: solid; border-width: 0 1px 1px")
     
     # Temp Average
     temp_avg_layout1 = QHBoxLayout()
@@ -342,7 +342,7 @@ def show_data_window():
     table_view2.horizontalHeader().setVisible(False)
     table_view2.verticalHeader().setVisible(False)
     table_view2.setModel(pulse_model)
-    table_view2.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+    table_view2.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
             f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
 
 #~~~~~~ Section 3: Modbus Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -377,7 +377,7 @@ def show_data_window():
     table_view3.horizontalHeader().setVisible(False)
     table_view3.verticalHeader().setVisible(False)
     table_view3.setModel(modbus_model)
-    table_view3.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+    table_view3.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
             f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
 #~~~~~~ Section 4: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     index_label = QLabel("Current Index = NA", data_window) 
@@ -461,7 +461,7 @@ def set_graph_window():
     graph_window = QWidget()
     graph_window.setWindowTitle("Setup Graph")
     graph_window.setGeometry(400, 100, 350, 200)
-    graph_window.setStyleSheet("background-color: #0f0f0f;")
+    graph_window.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
 
     graph_range = []
     
@@ -504,7 +504,7 @@ def set_config_window():
     config_window = QWidget()
     config_window.setWindowTitle("Test Configuration Setup")
     config_window.setGeometry(200, 200, 300, 500)
-    config_window.setStyleSheet("background-color: #0f0f0f;")
+    config_window.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
     
     layout = QVBoxLayout()
     layout.setSpacing(0)
@@ -614,7 +614,7 @@ app.setWindowIcon(QIcon("photos/tz-icon.png"))
 main_window = QMainWindow()
 main_window.setWindowTitle("Testzilla")
 main_window.setGeometry(100, 100, 900, 800)
-main_window.setStyleSheet("QMainWindow {background-color: #000000;border: 1px solid white;}")
+main_window.setStyleSheet(f"QMainWindow {{background-color: {PRIMARY_COLOR};border: 1px solid white;}}")
 
 # Create central widget for main window to hold other widgets
 central_widget = QWidget()
@@ -696,7 +696,7 @@ main_layout.addWidget(border_line1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a menu bar object
 menubar = main_window.menuBar()
-menubar.setStyleSheet("background-color: #0f0f0f; color: #ffffff; font: 12px;"\
+menubar.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
         f"font-family:{FONT_STYLE}; border-style: solid;"\
         "border-width: 0 1px 1px 1px;")
 # Add a File menu
@@ -769,8 +769,8 @@ config_menu.addAction(load_config_action)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a status bar object
 status_bar = QStatusBar()
-status_bar.setStyleSheet("QStatusBar {background-color: #0f0f0f; color: #ffffff; font: 10px;"\
-"border-style: solid; border-width: 1px 1px 1px 1px; border-color: white;}")
+status_bar.setStyleSheet(f"QStatusBar {{background-color: {SECONDARY_COLOR}; color: #ffffff; font: 10px;"\
+"border-style: solid; border-width: 1px 1px 1px 1px; border-color: white;}}")
 
 # Add the status bar to the main window
 main_window.setStatusBar(status_bar)
