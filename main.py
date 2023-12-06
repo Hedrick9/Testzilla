@@ -29,7 +29,7 @@ current_index = 0
 PRIMARY_COLOR = "#000000" 
 SECONDARY_COLOR = "#0f0f0f"
 TRI_COLOR = "#121212"  
-BUTTON_COLOR = "#2b2b2b" 
+BUTTON_COLOR = "#1f1f1f" 
 FONT_COLOR1 = "#ffffff"
 # FONT_STYLE = "Helvetica" "Courier New" "Bahnschrift"
 FONT_STYLE = "Bahnschrift"
@@ -697,7 +697,7 @@ main_layout.addWidget(border_line1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a menu bar object
 menubar = main_window.menuBar()
-menubar.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
+menubar.setStyleSheet(f"background-color: {PRIMARY_COLOR}; color: #ffffff; font: 12px;"\
         f"font-family:{FONT_STYLE}; border-style: solid;"\
         "border-width: 0 1px 1px 1px;")
 # Add a File menu
@@ -770,7 +770,7 @@ config_menu.addAction(load_config_action)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a status bar object
 status_bar = QStatusBar()
-status_bar.setStyleSheet(f"QStatusBar {{background-color: {SECONDARY_COLOR};\
+status_bar.setStyleSheet(f"QStatusBar {{background-color: {PRIMARY_COLOR};\
 color: #ffffff; font: 10px;border-style: solid; border-width: 1px 1px 1px 1px; border-color: white;}}")
 
 # Add the status bar to the main window
