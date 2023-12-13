@@ -504,7 +504,7 @@ def set_config_window():
 
     config_window = QWidget()
     config_window.setWindowTitle("Test Configuration Setup")
-    config_window.setGeometry(200, 200, 300, 500)
+    config_window.setGeometry(200, 200, 300, 200)
     config_window.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
     
     layout = QVBoxLayout()

@@ -108,8 +108,7 @@ def read_registers(client, starting_register, num_registers, device_address=1, *
                 result = response.registers
                 if response2 is not None:
                     result2 = response2.registers
-                else: result2 = None
-                result.extend(result2)
+                    result.extend(result2)
                 return result
         finally:
             # Close the Modbus connection
@@ -124,13 +123,13 @@ def read_registers(client, starting_register, num_registers, device_address=1, *
 
 def convert_float(data):
 
-    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.Big, wordorder=Endian.Big)
+    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.BIG, wordorder=Endian.BIG)
     result = binary_data.decode_32bit_float()
     return result
 
 def convert_32bit_int(data):
 
-    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.Big, wordorder=Endian.Big)
+    binary_data = BinaryPayloadDecoder.fromRegisters(data, byteorder=Endian.BIG, wordorder=Endian.BIG)
     result = binary_data.decode_32bit_int()
     return result
 
@@ -195,3 +194,6 @@ if __name__ == "__main__":
         print(f"Process Time: {process_time}")
 
     # a = read_registers(client, 999, 2, 1, 1499, 2)
+    # b = read_registers(client, 999,2)
+    # print(a)
+

@@ -54,7 +54,7 @@ https://www.python.org/
 - matplotlib
 - nidaqmx
 - PySide6
-- pymodbus
+- pymodbus==3.5.4
 - pyserial
 ```Powershell
 pip install pandas matplotlib nidaqmx PySide6 pymodbus pyserial
