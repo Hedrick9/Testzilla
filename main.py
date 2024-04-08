@@ -41,8 +41,8 @@ start_time = QTime.currentTime()
 ni_modules = ni.init_daq()
 # Initialize modbus client connection and start reading modbus data
 try:
-    client = mb.init()
-    mb.write_(client, 20000, 5555, device_address=1) # reset energy accumulators    
+    client = mb.init(port="COM3")
+    mb.write_(client, 20000, 5555) # reset energy accumulators    
     mb_data = []
     thread = threading.Thread(target=mb.data_stream, args=(client, mb_data,), daemon=True)
     thread.start()
@@ -102,7 +102,7 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
         ni_data = list(np.around(np.array(ni.read_daq()),2))
         data = mb_data[0][:3] + \
         list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
-        [None if x > 4000 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
+        [None if x > 3500 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
         data_log.append(time_data.copy()+data)
         pulse_data = list(np.array(ni_data[:4])-np.array(last_pulse_data))
         last_pulse_data = ni_data[:4]
