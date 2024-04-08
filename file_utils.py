@@ -15,10 +15,6 @@ import os
 import csv
 import shutil
 from datetime import date
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                   
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~ Creat File Directory  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 current_directory = None
 def create_directory():

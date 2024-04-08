@@ -98,7 +98,8 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
     time_data = [tod, test_time.test_time_min]
     # Try to read in data from ni hardware; otherwise return list of 0's
     if ni_modules > 0:
-        ni_data = list(np.around(np.array(ni.read_daq()),1))
+        # ni_data = list(np.around(np.array(ni.read_daq()),1))
+        ni_data = list(np.around(np.array(ni.read_daq()),2))
         data = mb_data[0][:3] + \
         list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
         [None if x > 4000 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
@@ -113,7 +114,7 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
     else:
         average_data = pd.DataFrame(data_log[-test_time.timing_interval:].copy()).drop(columns=[0,1,4,5,6,7,8]).mean()
         _write = [*average_data[0:2], *data_log[-1][4:9], *average_data[2:]]
-        data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,1) for item in _write]
+        data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
 
 #~~~~~~~~~~~~~~~~~~~~~~ Update Plot Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def update_plot():
@@ -762,8 +763,6 @@ load_config_action = QAction("Load Config", main_window)
 #load_config_action.triggered.connect()
 config_menu.addAction(setup_config_action)
 config_menu.addAction(load_config_action)
-
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                               Set Status Bar

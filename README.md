@@ -34,6 +34,8 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Add fry test capability
 - [ ] Add burger test capability
 - [ ] Test Analog input reading w/ RH meter (avg various readings?)
+- [ ] Update ni script for greater configuration flexibility 
+- [ ] Update modbus script 
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
@@ -43,9 +45,9 @@ https://knowledge.ni.com/KnowledgeArticleDetails?id=kA03q000000YGQwCAO&l=en-US
 ```
 ***NI DAQ-mx:***
 ```markdown
-https://www.ni.com/en-us/support/downloads/drivers/download.ni-daq-mx.html#480879
+https://www.ni.com/en/support/downloads/drivers/download.ni-daq-mx.html#521556
 ```
-### Python 3.11 or later: 
+### Python 3.12 or later: 
 ```markdown
 https://www.python.org/
 ```
@@ -57,7 +59,7 @@ https://www.python.org/
 - pymodbus==3.5.4
 - pyserial
 ```Powershell
-pip install pandas matplotlib nidaqmx PySide6 pymodbus pyserial
+pip install pandas matplotlib nidaqmx PySide6 pymodbus==3.5.4 pyserial
 ```
 
 ```python
