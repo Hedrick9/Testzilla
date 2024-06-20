@@ -38,7 +38,8 @@ start_time = QTime.currentTime()
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Initializes ni DAQ and returns number of tc modules available
-ni_modules = ni.init_daq()
+ni_daq = ni.NI()
+tc_modules = ni_daq.tc_modules
 # Initialize modbus client connection and start reading modbus data
 try:
     client = mb.init(port="COM3")
@@ -97,9 +98,9 @@ def get_data(pcfs=[1, .05, 1, 1]): # pcfs = pulse conversion factors
     tod = datetime.now().strftime("%H:%M:%S")
     time_data = [tod, test_time.test_time_min]
     # Try to read in data from ni hardware; otherwise return list of 0's
-    if ni_modules > 0:
+    if tc_modules > 0:
         # ni_data = list(np.around(np.array(ni.read_daq()),1))
-        ni_data = list(np.around(np.array(ni.read_daq()),2))
+        ni_data = list(np.around(np.array(ni_daq.read_all()),2))
         data = mb_data[0][:3] + \
         list(np.multiply(pcfs, np.array(ni_data[:4])-np.array(pulse_reset))) + \
         [None if x > 3500 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
@@ -710,7 +711,7 @@ exit_action.triggered.connect(main_window.close)
 file_menu.addAction(exit_action)
 # Add an action for new test file
 new_test_action = QAction("New Test", main_window)
-new_test_action.triggered.connect(lambda: fu.file_setup(testing, ni_modules))
+new_test_action.triggered.connect(lambda: fu.file_setup(testing, tc_modules))
 file_menu.addAction(new_test_action)
 # Add an action for copying test file
 copy_file_action = QAction("Create File Copy", main_window)
@@ -735,7 +736,7 @@ data_menu.addAction(view_data_action)
 # Add a Graph menu
 graph_menu = QMenu("Graph", menubar)
 tc_items = []
-for i in range(ni_modules*16):
+for i in range(tc_modules*16):
     item = QAction("Temp {}".format(i), graph_menu, checkable=True)
     tc_items.append(item)
 menubar.addMenu(graph_menu)
@@ -748,7 +749,7 @@ graph_menu_action.setFont(g_font)
 graph_menu.triggered.connect(show_graph_window)
 graph_menu.addAction(graph_menu_action)
 
-for i in range(ni_modules*16):
+for i in range(tc_modules*16):
     graph_menu.addAction(tc_items[i])
 
 set_graph_action = QAction("Set Graph Range")
@@ -919,7 +920,7 @@ if __name__ == "__main__":
         fu.create_directory()
        
         # Create new CSV Test File
-        fu.file_setup(testing, ni_modules)
+        fu.file_setup(testing, tc_modules)
         status.append("Adding new file: {}".format(fu.file_name))
 
         app.exec()
@@ -929,6 +930,6 @@ if __name__ == "__main__":
         print(e)
 
     finally:
-        ni.close_daq()
+        ni_daq.close_daq()
         sys.exit()
 
