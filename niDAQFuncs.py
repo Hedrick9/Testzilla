@@ -21,13 +21,15 @@ class NI:
         self.ci_slot = None # Flag for whether counter module is connected
         self.ai_slot = None # Flag for whether anaolog input module is connected
         self.tc_modules = None # number of tc modules connected
+        self.four_chan = False
     #~~~~~~ Identify whether modules are conencted ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         system = nidaqmx.system.System.local()
         for count, device in enumerate(system.devices):
-            if device.product_type == "NI 9411":
+            if device.product_type == "NI 9211":
+                self.four_chan = True
+            elif device.product_type == "NI 9411":
                 self.ci_slot = count # Check which slot ci module is in 
-        for count, device in enumerate(system.devices):
-            if device.product_type == "NI 9215":
+            elif device.product_type == "NI 9215":
                 self.ai_slot = count # Check which slot ai module is in 
     #~~~~~~ Create Tasks for Counter/DI Module ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
         try:
@@ -166,8 +168,15 @@ class NI:
     #~~~~ Class method for reading data from ni 9214 module ~~~~~~~~~~~~~~~~~~~
     def read_tc_data(self):
         data = []
-        for i in range(5, len(self.task_list)):
-            if self.task_list[i] is not None: data.extend(self.task_list[i].read())
+        if self.four_chan == True: 
+            for i in range(5, len(self.task_list)):
+                if self.task_list[i] is not None: 
+                    data.extend(self.task_list[i].read())
+                    data = data + [0]*(16-len(data))
+        else:
+            for i in range(5, len(self.task_list)):
+                if self.task_list[i] is not None: data.extend(self.task_list[i].read())
+
         return data
     #~~~~ Class method for reading data from ni 9215 module ~~~~~~~~~~~~~~~~~~~
     def read_ai_data(self):

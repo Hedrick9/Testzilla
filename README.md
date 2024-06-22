@@ -7,8 +7,10 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Add custom graph scale feature for y-axis
 - [x] Fix graphing for null/open channels
 - [x] Allow for new file creation
-- [x] Work on config page: Time sampling
-- [ ] Work on config page: tc offsets, look into file upload
+- [ ] Work on config page: 
+    - [x] Time sampling
+    - [ ] TC offsets: look into file upload
+    - [ ] Logging extra channel specified by user 
 - [x] Incorporate modbus read capabilites
     - [x] Read in modbus data from Shark meter/General device
     - [x] Determine registers necessary 
@@ -26,16 +28,17 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Copy data feature
 - [x] Fix Spacing for widgets
 - [x] Fix Window close issue
-- [ ] Logging extra channel specified by user (config page)
 - [x] Averaging for intervals greater than 1 second
 - [x] Logging data for intervals greater than 1 second
 - [x] Swap upper and lower bound for graph range
 - [x] Create table for modbus data in data window
 - [ ] Add fry test capability
 - [ ] Add burger test capability
-- [ ] Test Analog input reading w/ RH meter (avg various readings?)
-- [ ] Update ni script for greater configuration flexibility 
+- [x] Test Analog input reading w/ RH meter (avg various readings?)
+- [x] Update ni script for greater configuration flexibility 
 - [ ] Update modbus script 
+- [x] Create Data class for all data related processes
+- [ ] Create UI script to isolate UI processes from main script 
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
