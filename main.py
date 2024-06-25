@@ -66,8 +66,8 @@ class TestTime:
         self.test_time = 0
         self.test_time_min = 0
 
+#~~~~~~~~~ Get Data and Handle Data Related Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Data:
-
     def __init__(self):
         self.ni_daq = ni.NI()
         self.tc_modules = self.ni_daq.tc_modules
@@ -782,8 +782,6 @@ status_bar.addPermanentWidget(test_file_label)
 status_bar_label = QLabel("Elapsed Time: 00:00:00")
 status_bar_label.setStyleSheet("color: #ffffff;")
 status_bar.addPermanentWidget(status_bar_label)
-
-# Function for updating the elapsed time label
 
 def update_values(data, test_time):
 #~~~~~ Update Elapsed Time ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

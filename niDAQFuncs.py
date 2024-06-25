@@ -20,13 +20,16 @@ class NI:
         self.task_list = [] # list for all tasks that will be used for reading
         self.ci_slot = None # Flag for whether counter module is connected
         self.ai_slot = None # Flag for whether anaolog input module is connected
-        self.tc_modules = None # number of tc modules connected
+        self.tc_modules = 0 # number of tc modules connected
         self.four_chan = False
     #~~~~~~ Identify whether modules are conencted ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         system = nidaqmx.system.System.local()
         for count, device in enumerate(system.devices):
             if device.product_type == "NI 9211":
+                self.tc_modules += 1
                 self.four_chan = True
+            elif device.product_type == "NI 9214":
+                self.tc_modules += 1
             elif device.product_type == "NI 9411":
                 self.ci_slot = count # Check which slot ci module is in 
             elif device.product_type == "NI 9215":
@@ -147,10 +150,7 @@ class NI:
                 self.task_list[i].start()
         else:
             print("Unable to connect to digital input module NI-9411")
-        
-        # Determine number of tc modules connected
-        if self.task_list[5] and self.task_list[6] is not None: self.tc_modules = 2
-        else: self.tc_modules = 1
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #               Class Methods for Reading Data from Modules
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
