@@ -116,12 +116,12 @@ if __name__ == "__main__":
         data.mb_data = [list(np.zeros(13))]
 
  #~~~~~~~ ONLY USE SECTION BELOW FOR 4 CHANNEL TC MODULE ~~~~~~~~~~~~~~~~~~~~~~~
-    data.stream = True
-    try:
-        thread = threading.Thread(target=data.ni_stream, args=(), daemon=True)
-        thread.start()
-    except Exception as e:
-        print("Unable to connect to ni DAQ.")
+    # data.stream = True
+    # try:
+    #     thread = threading.Thread(target=data.ni_stream, args=(), daemon=True)
+    #     thread.start()
+    # except Exception as e:
+    #     print("Unable to connect to ni DAQ.")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                Initialize Application and Start Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         timer.start(1000)
         # timer event executions
         timer.timeout.connect(test_time.update_time)
-        # timer.timeout.connect(data.update_ni_data)
+        timer.timeout.connect(data.update_ni_data)
         timer.timeout.connect(lambda: data.get_data(test_time))
         timer.timeout.connect(lambda: mw.update_plot(data.data_log))
         timer.timeout.connect(lambda: mw.data_window.update_data(data, test_time))
