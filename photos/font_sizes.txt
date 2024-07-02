@@ -1,0 +1,23 @@
+FSTC: 316 x 107
+STATUS: 150 x 38
+TEST TIME: 225 x 40 
+AMBIENT: 170 x 38
+
+DUNE:
+FSTC: 330 x 75
+STATUS: 170 x 25
+TEST TIME: 300 x 34 
+AMBIENT: 190 x 26
+
+Font color: r:220, g:82, b:82
+BG color: r:28, g:16, b:69
+
+PRIMARY_COLOR = "#170D33"
+GRID_COLOR = "#DB4D4D"
+
+Recording Color:
+hex: #225c40
+r:34 g:92 b:64
+Not Recording Color:
+hex: #b8494d
+r:184 g:73 b:77

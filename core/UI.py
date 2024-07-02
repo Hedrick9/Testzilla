@@ -13,6 +13,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import core.file_utils as fu
@@ -23,8 +24,13 @@ FONT_STYLE = "Bahnschrift"
 PRIMARY_COLOR = "#000000"
 SECONDARY_COLOR = "#0f0f0f"
 TRI_COLOR = "#121212"  
-BUTTON_COLOR = "#1f1f1f" 
+DT_COLOR = "#050505"
+BUTTON_COLOR = "#0a0a0a"
 FONT_COLOR1 = "#ffffff"
+DATA_FONT = "#b5b5b5"
+GRID_COLOR = "#03fcd3"
+BORDER_COLOR = "#ffffff"
+IMAGE_FONT = "nasa"
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Classes & Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +56,7 @@ class MainWindow(QMainWindow):
         # Create the main window for the application
         self.setWindowTitle("Testzilla")
         self.setGeometry(100,50,900,800)
-        self.setStyleSheet(f"QMainWindow {{background-color: {PRIMARY_COLOR};border:1px solid white;}}")
+        self.setStyleSheet(f"QMainWindow {{background-color: {PRIMARY_COLOR};border:1px solid {BORDER_COLOR};}}")
         # Create central widget for main window to hold other main window widgets
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -64,21 +70,21 @@ class MainWindow(QMainWindow):
         self.header_layout = QHBoxLayout(self.header_widget)
         self.central_layout.addWidget(self.header_widget)
         # Header Subsection 1: Logo
-        self.main_logo = QLabel("Testzilla")
+        self.main_logo = QLabel("FSTC")
         self.main_logo.setStyleSheet(f"color: #ffffff; font: 40px; font-weight: bold;\
                 font-family:{FONT_STYLE};")
-        self.main_logo.setPixmap(QPixmap("photos/fstc_logo2.png"))
+        self.main_logo.setPixmap(QPixmap(f"photos/fstc_{IMAGE_FONT}.png"))
         self.header_layout.addWidget(self.main_logo)
         # Header Subsection 2: Test Time
         self.time_layout = QVBoxLayout()
         self.time_label = QLabel("TEST TIME:")
         self.time_label.setStyleSheet(f"color: #ffffff; font: 30px; font-weight: bold;\
                     font-family:{FONT_STYLE};")
-        self.time_label.setPixmap(QPixmap("photos/test_time1.png"))
+        self.time_label.setPixmap(QPixmap(f"photos/test_time_{IMAGE_FONT}.png"))
         self.time_label.setAlignment(Qt.AlignCenter)
         self.time_layout.addWidget(self.time_label)
         self.time_label_value = QLabel("0.0")
-        self.time_label_value.setStyleSheet(f"color: #ffffff; font: 30px; font-weight:bold;\
+        self.time_label_value.setStyleSheet(f"color: #ffffff; font: 30px; font-weight:;\
                     font-family:{FONT_STYLE};") #  
         self.time_label_value.setAlignment(Qt.AlignCenter)
         self.time_layout.addWidget(self.time_label_value)
@@ -90,22 +96,23 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("Status:")
         self.status_label.setStyleSheet(f"color: #ffffff; font: 25px; font-weight: bold;\
                     font-family:{FONT_STYLE};")
-        self.status_label.setPixmap(QPixmap("photos/status1.png"))
+        self.status_label.setPixmap(QPixmap(f"photos/status_{IMAGE_FONT}.png"))
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_layout.addWidget(self.status_label)
         self.status_indicator = QLabel("Not Recording")
         self.status_indicator.setFixedSize(250, 27)
         self.status_indicator.setStyleSheet(f"background-color: #b8494d; font: 12px;\
                 color: {FONT_COLOR1}; font-weight: bold; border-style: solid;")
+        self.status_indicator.setPixmap(QPixmap(f"photos/not_recording_{IMAGE_FONT}.png"))
         self.status_indicator.setAlignment(Qt.AlignCenter)
         self.status_layout.addWidget(self.status_indicator)
         self.ambient_label = QLabel("Ambient:")
         self.ambient_label.setStyleSheet(f"color: #ffffff; font: 25px; font-weight: bold;\
                     font-family:{FONT_STYLE};")
-        self.ambient_label.setPixmap(QPixmap("photos/ambient1.png"))
+        self.ambient_label.setPixmap(QPixmap(f"photos/ambient_{IMAGE_FONT}.png"))
         self.ambient_label.setAlignment(Qt.AlignCenter)
         self.ambient_label_value = QLabel("NA")
-        self.ambient_label_value.setStyleSheet(f"color: #ffffff; font: 25px; font-weight: bold;\
+        self.ambient_label_value.setStyleSheet(f"color: #ffffff; font: 25px; font-weight: ;\
                     font-family:{FONT_STYLE};")
         self.ambient_label_value.setAlignment(Qt.AlignCenter)
         self.status_layout.addWidget(self.ambient_label)
@@ -246,11 +253,11 @@ class MainWindow(QMainWindow):
         border_line1 = QFrame()
         border_line1.setFrameShape(QFrame.HLine)
         border_line1.setFrameShadow(QFrame.Sunken)
-        border_line1.setStyleSheet("color: #ffffff; background-color: #ffffff; border-width: 1px;")
+        border_line1.setStyleSheet("color: {BORDER_COLOR}; background-color: {BORDER_COLOR}; border-width: 1px;")
         border_line2 = QFrame()
         border_line2.setFrameShape(QFrame.HLine)
         border_line2.setFrameShadow(QFrame.Sunken)
-        border_line2.setStyleSheet("color: #ffffff; background-color: #ffffff; border-width: 1px;")
+        border_line2.setStyleSheet("color: {BORDER_COLOR}; background-color: {BORDER_COLOR}; border-width: 1px;")
      #~~~~~~ LAYOUT ORGANIZATION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.central_layout.addWidget(border_line1)
         self.central_layout.addWidget(self.canvas)
@@ -283,19 +290,19 @@ class MainWindow(QMainWindow):
         if len(data_log) < 3600 and len(tc_list)>0:
             self.ax.clear()
             for item in tc_list:
-                self.ax.plot(df[item+11], label=str(item), lw=0.5)
+                self.ax.plot(df[1], df[item+11], label=str(item), lw=0.5)
         elif len(data_log) >= 3600 and len(tc_list)>0:
             self.ax.clear()
             for item in tc_list:
-                self.ax.plot(df[item+11][-3600:-1], label=str(item), lw=0.5)
+                self.ax.plot(df[1][-3600:-1], df[item+11][-3600:-1], label=str(item), lw=0.5)
         # Graph tc channel 0 if none selected
         else:
             if len(df) < 3600:
                 self.ax.clear()
-                self.ax.plot(df[11], label="ambient", lw=0.5)
+                self.ax.plot(df[1], df[11], label="ambient", lw=0.5)
             else:
                 self.ax.clear()
-                self.ax.plot(df[11][-3600:-1], label="ambient", lw=0.5)
+                self.ax.plot(df[1][-3600:-1], df[11][-3600:-1], label="ambient", lw=0.5)
         # Format Plot   
         if self.graph_window is not None:
             try:
@@ -306,13 +313,13 @@ class MainWindow(QMainWindow):
             self.ax.set_ylim([None, None])
         self.ax.legend(loc='lower right', frameon=False, ncol=3, labelcolor=FONT_COLOR1)
         self.ax.set_facecolor(TRI_COLOR)
-        self.ax.tick_params(labelbottom=False, labelcolor=FONT_COLOR1, color="#ffffff", labelsize=8)
+        self.ax.tick_params(labelbottom=True, labelcolor=FONT_COLOR1, color="#ffffff", labelsize=11)
         self.ax.minorticks_on()
         #ax.spines[:].set_visible(False)#set_color("#ffffff")
         self.ax.spines[:].set_color("#2b2b2a")
         self.ax.spines[:].set_linewidth(0.25)
-        self.ax.grid(which='major', linewidth=0.3, color="#03fcd3") #22ffff
-        self.ax.grid(which='minor', linewidth=0.1, color="#03fcd3") 
+        self.ax.grid(which='major', linewidth=0.3, color=GRID_COLOR) 
+        self.ax.grid(which='minor', linewidth=0.1, color=GRID_COLOR)
         self.canvas.draw() # update plot
     
     #~~~ DISPLAY GRAPH CHANNEL LIST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
@@ -391,7 +398,11 @@ class MainWindow(QMainWindow):
         self.status.append("testing in progress...")
         self.status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
             color: #ffffff; font-weight: bold;")
-        self.status_indicator.setText("Recording")
+        # self.status_indicator.setText("Recording")
+        app_dir = fu.current_directory
+        image_path = f"{app_dir}/photos/recording_{IMAGE_FONT}.png"
+        pixmap = QPixmap(image_path)
+        self.status_indicator.setPixmap(pixmap)
         self.test_file_label.setText(f"File Name: {fu.file_name}")
         self.start_time = QTime.currentTime()
         self.test_time.reset()
@@ -407,8 +418,12 @@ class MainWindow(QMainWindow):
         self.update_system_status(self.status[-1])
         self.status_indicator.setStyleSheet("background-color: #b8494d; font: 12px; \
             color: #ffffff; font-weight: bold;")
-        self.status_indicator.setText("Not Recording")
-    
+        # self.status_indicator.setText("Not Recording")
+        app_dir = fu.current_directory
+        image_path = f"{app_dir}/photos/not_recording_{IMAGE_FONT}.png"
+        pixmap = QPixmap(image_path)
+        self.status_indicator.setPixmap(pixmap)
+   
     #~~~~ SLOT FUNCTION FOR HANDLING RESET BUTTON CLICK EVENT ~~~~~~~~~~~~~~~~
     def reset_(self):
         self.data.pulse_reset = self.data.pulse_data
@@ -431,20 +446,20 @@ class MainWindow(QMainWindow):
     
         if data.data_log[-1][11] == None:
             self.ambient_label_value.setText("Open")
-            self.ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
+            self.ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
     
         elif 70 <= data.data_log[-1][11] < 80:
             self.ambient_label_value.setText("{}".format(data.data_log[-1][11]))
-            self.ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:bold;\
+            self.ambient_label_value.setStyleSheet("color: #ffffff; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
         elif data.data_log[-1][11] >=80:
             self.ambient_label_value.setText("{}".format(data.data_log[-1][11]))
-            self.ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:bold;\
+            self.ambient_label_value.setStyleSheet("color: #b8494d; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
         else:
             self.ambient_label_value.setText("{}".format(data.data_log[-1][11]))
-            self.ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:bold;\
+            self.ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
         
         test_time.current_index += 1
@@ -461,7 +476,7 @@ class DataWindow(QWidget):
         super().__init__()
         self.setWindowTitle("Data")
         self.setGeometry(1000, 50, 425, 800)
-        self.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
+        self.setStyleSheet(f"background-color: {PRIMARY_COLOR};")
         # Setup Data Window Layout
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
@@ -469,19 +484,22 @@ class DataWindow(QWidget):
         label1 = QLabel("Temperatures (F):", self)
         label1.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
-        
+        label1.setPixmap(QPixmap(f"photos/temp_{IMAGE_FONT}.png"))
+
         label2 = QLabel("Pulse Data:", self)
         label2.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
+        label2.setPixmap(QPixmap(f"photos/pulse_{IMAGE_FONT}.png"))
 
         label3 = QLabel("Modbus Data:", self)
         label3.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
+        label3.setPixmap(QPixmap(f"photos/modbus_{IMAGE_FONT}.png"))
 
         label4 = QLabel("Analysis:", self)
         label4.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
-
+        label4.setPixmap(QPixmap(f"photos/analysis_{IMAGE_FONT}.png"))
     #~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.tc_model = QStandardItemModel(8, 4)
         for row in range(8):
@@ -495,41 +513,43 @@ class DataWindow(QWidget):
         table_view1.verticalHeader().setVisible(False)
         table_view1.setFixedHeight(260)
         table_view1.setModel(self.tc_model)
-        table_view1.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px; font-family:{FONT_STYLE};"\
+        table_view1.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px; font-family:{FONT_STYLE};"\
                               "border-style: solid; border-width: 0 1px 1px")
         # Temp Average
         temp_avg_layout1 = QHBoxLayout()
         label_1a = QLabel(" Average of Temps  ")
         label_1a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        label_1a.setPixmap(QPixmap(f"photos/avg_temp_{IMAGE_FONT}.png"))
         temp_avg_layout1.addWidget(label_1a)
         self.temp_avg_value_1a = QLineEdit()
-        self.temp_avg_value_1a.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
+        self.temp_avg_value_1a.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border:none;border-bottom:1px solid white;")
         temp_avg_layout1.addWidget(self.temp_avg_value_1a)
         label_1b = QLabel(" to ")
-        label_1b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        label_1b.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE}")
         temp_avg_layout1.addWidget(label_1b)
         self.temp_avg_value_1b = QLineEdit()
-        self.temp_avg_value_1b.setStyleSheet("color: #ffffff; font: 14px; border: none; border-bottom:1px solid white;")
+        self.temp_avg_value_1b.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border: none; border-bottom:1px solid white;")
         temp_avg_layout1.addWidget(self.temp_avg_value_1b)
         self.temp_avg_value_1c = QLabel(" = NA")
-        self.temp_avg_value_1c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
+        self.temp_avg_value_1c.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-weight:bold;")
         temp_avg_layout1.addWidget(self.temp_avg_value_1c)
         
         temp_avg_layout2 = QHBoxLayout()
         label_2a = QLabel(" Average of Temps  ")
         label_2a.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        label_2a.setPixmap(QPixmap(f"photos/avg_temp_{IMAGE_FONT}.png"))
         temp_avg_layout2.addWidget(label_2a)
         self.temp_avg_value_2a = QLineEdit()
-        self.temp_avg_value_2a.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
+        self.temp_avg_value_2a.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border:none;border-bottom:1px solid white;")
         temp_avg_layout2.addWidget(self.temp_avg_value_2a)
         label_2b = QLabel(" to ")
-        label_2b.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        label_2b.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE}")
         temp_avg_layout2.addWidget(label_2b)
         self.temp_avg_value_2b = QLineEdit()
-        self.temp_avg_value_2b.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom:1px solid white;")
+        self.temp_avg_value_2b.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border:none;border-bottom:1px solid white;")
         temp_avg_layout2.addWidget(self.temp_avg_value_2b)
         self.temp_avg_value_2c = QLabel(" = NA")
-        self.temp_avg_value_2c.setStyleSheet("color: #ffffff; font: 14px; font-weight:bold;")
+        self.temp_avg_value_2c.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-weight:bold;")
         temp_avg_layout2.addWidget(self.temp_avg_value_2c)
 
     #~~~~~~ Section 2: Pulse and Other Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -564,7 +584,7 @@ class DataWindow(QWidget):
         table_view2.horizontalHeader().setVisible(False)
         table_view2.verticalHeader().setVisible(False)
         table_view2.setModel(self.pulse_model)
-        table_view2.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
+        table_view2.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px;"\
                 f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
 
     #~~~~~~ Section 3: Modbus Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -599,30 +619,32 @@ class DataWindow(QWidget):
         table_view3.horizontalHeader().setVisible(False)
         table_view3.verticalHeader().setVisible(False)
         table_view3.setModel(self.modbus_model)
-        table_view3.setStyleSheet(f"background-color: {SECONDARY_COLOR}; color: #ffffff; font: 12px;"\
+        table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px;"\
                 f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
     #~~~~~~ Section 4: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.index_label = QLabel("Current Index = NA", self) 
-        self.index_label.setStyleSheet("color: #ffffff; font: 14px; font-family:{};".format(FONT_STYLE))
+        self.index_label.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};")
         index_layout = QHBoxLayout()
         start_index_label = QLabel(" Start Index =  ")
-        start_index_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        start_index_label.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE}")
+        start_index_label.setPixmap(QPixmap(f"photos/start_index_{IMAGE_FONT}.png"))
         index_layout.addWidget(start_index_label)
         self.start_index_input = QLineEdit()
-        self.start_index_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
+        self.start_index_input.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border:none;border-bottom: 1px solid white;")
         index_layout.addWidget(self.start_index_input)
         end_index_label = QLabel(" End Index = ")
         end_index_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        end_index_label.setPixmap(QPixmap(f"photos/end_index_{IMAGE_FONT}.png"))
         index_layout.addWidget(end_index_label)
         self.end_index_input = QLineEdit()
-        self.end_index_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
+        self.end_index_input.setStyleSheet(f"color: {DATA_FONT}; font: 14px; border:none;border-bottom: 1px solid white;")
         index_layout.addWidget(self.end_index_input)
          
         self.er_time_label = QLabel(" Start Time = NA     |     End Time = NA  ")
-        self.er_time_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE};")
+        self.er_time_label.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};")
         
         self.meter_selection = QComboBox()
-        self.meter_selection.setStyleSheet("color: #ffffff; font: 14px;")
+        self.meter_selection.setStyleSheet(f"color: {DATA_FONT}; font: 14px;")
         self.meter_selection.addItem("Gas Meter")
         self.meter_selection.addItem("120V Meter")
         self.meter_selection.addItem("208V Meter")
@@ -630,12 +652,14 @@ class DataWindow(QWidget):
         energy_rate_layout = QHBoxLayout()
         hhv_label = QLabel(" HHV =            ")
         hhv_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        hhv_label.setPixmap(QPixmap(f"photos/hhv_{IMAGE_FONT}.png"))
         energy_rate_layout.addWidget(hhv_label)
         self.hhv_input = QLineEdit("1")
         self.hhv_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
         energy_rate_layout.addWidget(self.hhv_input)
         gcf_label = QLabel(" GCF =          ")
         gcf_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE}")
+        gcf_label.setPixmap(QPixmap(f"photos/gcf_{IMAGE_FONT}.png"))
         energy_rate_layout.addWidget(gcf_label)
         self.gcf_input = QLineEdit("1")
         self.gcf_input.setStyleSheet("color: #ffffff; font: 14px; border:none;border-bottom: 1px solid white;")
@@ -650,11 +674,13 @@ class DataWindow(QWidget):
         self.layout.addWidget(table_view1)
         self.layout.addLayout(temp_avg_layout1)
         self.layout.addLayout(temp_avg_layout2)
+        self.layout.addItem(spacer_())
         self.layout.addWidget(label2)
         self.layout.addWidget(table_view2)
         self.layout.addWidget(label3)
         self.layout.addWidget(table_view3)
         self.layout.addWidget(label4)
+        self.layout.addItem(spacer_())
         self.layout.addWidget(self.index_label)
         self.layout.addWidget(self.meter_selection)
         self.layout.addLayout(index_layout)

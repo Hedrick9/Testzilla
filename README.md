@@ -38,7 +38,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Update ni script for greater configuration flexibility 
 - [ ] Update modbus script 
 - [x] Create Data class for all data related processes
-- [ ] Create UI script to isolate UI processes from main script 
+- [x] Create UI script to isolate UI processes from main script 
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
@@ -60,9 +60,10 @@ https://www.python.org/
 - nidaqmx
 - PySide6
 - pymodbus==3.5.4
+- minimalmodbus
 - pyserial
 ```Powershell
-pip install pandas matplotlib nidaqmx PySide6 pymodbus==3.5.4 pyserial
+pip install pandas matplotlib nidaqmx PySide6 pymodbus==3.5.4 minimalmodbus pyserial
 ```
 
 ```python
