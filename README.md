@@ -21,7 +21,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Averaging for temperature readings 
 - [x] Energy Rate calculator
 - [x] Add ambient channel to Main window
-- [ ] Rename channel ability
+- [x] Rename channel ability
 - [x] Correct reset timing
 - [x] Add t0 timestamp for start test and resets
 - [x] Rename default temp channel 0

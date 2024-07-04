@@ -27,7 +27,8 @@ TRI_COLOR = "#121212"
 DT_COLOR = "#050505"
 BUTTON_COLOR = "#0a0a0a"
 FONT_COLOR1 = "#ffffff"
-DATA_FONT = "#b5b5b5"
+# DATA_FONT = "#b5b5b5"
+DATA_FONT = "#ffffff"
 GRID_COLOR = "#03fcd3"
 BORDER_COLOR = "#ffffff"
 IMAGE_FONT = "nasa"
@@ -396,6 +397,7 @@ class MainWindow(QMainWindow):
         self.test_time.current_index=0
         self.data.pulse_reset = self.data.pulse_data
         self.status.append("testing in progress...")
+        # Styling for status indicator ~~~
         self.status_indicator.setStyleSheet("background-color: #225c40; font: 12px; \
             color: #ffffff; font-weight: bold;")
         # self.status_indicator.setText("Recording")
@@ -403,6 +405,9 @@ class MainWindow(QMainWindow):
         image_path = f"{app_dir}/photos/recording_{IMAGE_FONT}.png"
         pixmap = QPixmap(image_path)
         self.status_indicator.setPixmap(pixmap)
+        # rewrite headers (if headers were renamed)
+        fu.write_headers(self.data_window.retrieve_model_data())
+        # reset clocks and begin test sequence
         self.test_file_label.setText(f"File Name: {fu.file_name}")
         self.start_time = QTime.currentTime()
         self.test_time.reset()
@@ -501,12 +506,16 @@ class DataWindow(QWidget):
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
         label4.setPixmap(QPixmap(f"photos/analysis_{IMAGE_FONT}.png"))
     #~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.tc_model = QStandardItemModel(8, 4)
+        self.tc_model = QStandardItemModel(8, 8)
         for row in range(8):
-            for column in range(4):
-                index = (row)+(column*8)
-                item = QStandardItem("Temp {}: NA".format(index))
-                self.tc_model.setItem(row, column, item)
+            for column in range(8):
+                if column % 2 == 0:
+                    index = int((row)+((column/2)*8))
+                    item = QStandardItem("Temp {}:".format(index))
+                    self.tc_model.setItem(row, column, item)
+                else:
+                    item = QStandardItem("NA".format(index))
+                    self.tc_model.setItem(row, column, item)
         table_view1 = QTableView()
         table_view1.horizontalHeader().setVisible(False)
         # table_view1.verticalHeader().setDefaultSectionSize(300)
@@ -698,13 +707,13 @@ class DataWindow(QWidget):
         # Update the values in the temperature table 
         for row in range(8):
             if len(data.data_log[0]) > 30: # if there are more than 16 tc's
-                for column in range(4):
-                    index = (row)+(column*8)
-                    self.tc_model.item(row, column).setText(f"Temp {index}:    {data.data_log[-1][index+11]}")
+                for column in range(1,8,2):
+                    index = int((row)+(((column-1)/2)*8))
+                    self.tc_model.item(row, column).setText(f"{data.data_log[-1][index+11]}")
             else:
-                for column in range(2):
-                    index = (row)+(column*8)
-                    self.tc_model.item(row, column).setText(f"Temp {index}:    {data.data_log[-1][index+11]}")
+                for column in range(1,4,2):
+                    index = int((row)+(((column-1)/2)*8))
+                    self.tc_model.item(row, column).setText(f"{data.data_log[-1][index+11]}")
 
         try:
             t1a = int(self.temp_avg_value_1a.text())
@@ -761,9 +770,15 @@ class DataWindow(QWidget):
         except IndexError as e:
             pass
 
-
-
-
+    def retrieve_model_data(self):
+        headers = ["Time of Day", "Test Time", "Voltage", "W", "Wh.208", "Wh.120","Gas","Water","Extra"] + \
+                  ["AI 1", "AI 2", "Ambient"]
+        for column in range(0,7,2):
+            for row in range(8):
+                item_data = self.tc_model.item(row, column).text()
+                headers.append(item_data)
+        headers.pop(12) # ambient header is unchanged 
+        return headers
 
 
 if __name__ == "__main__":
