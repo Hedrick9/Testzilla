@@ -69,7 +69,7 @@ def copy_file():
 
     shutil.copy2(source_file, destination_file)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def write_data(data, testing, time_to_write):
     global file_name
     if testing and time_to_write:
@@ -77,3 +77,15 @@ def write_data(data, testing, time_to_write):
             csvWriter = csv.writer(file_data, delimiter=',')
             csvWriter.writerow(data)
 
+def write_headers(headers):
+    global file_name
+    # Read the CSV file into a list of lists
+    with open(file_name, mode='r', newline='') as file:
+        reader = csv.reader(file)
+        data = list(reader)
+    # Overwrite the first row (header)
+    data[2] = headers
+    # Write the updated data back to the CSV file
+    with open(file_name, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
