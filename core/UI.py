@@ -307,7 +307,7 @@ class MainWindow(QMainWindow):
         # Format Plot   
         if self.graph_window is not None:
             try:
-                self.ax.set_ylim([graph_range[-1][1], graph_range[-1][0]])
+                self.ax.set_ylim([self.graph_range[-1][1], self.graph_range[-1][0]])
             except Exception as e:
                 pass
         else: 
@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
         set_button = QPushButton("Set Range")
         set_button.setStyleSheet(button_style)
         # set_button.clicked.connect(lambda: print(f"{upper_bound_entry.text()} and {lower_bound_entry.text()}"))
-        set_button.clicked.connect(lambda: graph_range.append((int(upper_bound_entry.text()), int(lower_bound_entry.text()),)))
+        set_button.clicked.connect(lambda: self.graph_range.append((int(upper_bound_entry.text()), int(lower_bound_entry.text()),)))
     
         layout.addWidget(label1)
         layout.addWidget(upper_bound_entry)
@@ -394,7 +394,6 @@ class MainWindow(QMainWindow):
     def start_test(self):
         self.test_time.testing = True
         self.data.data_log = []
-        self.test_time.current_index=0
         self.data.pulse_reset = self.data.pulse_data
         self.status.append("testing in progress...")
         # Styling for status indicator ~~~
@@ -431,6 +430,7 @@ class MainWindow(QMainWindow):
    
     #~~~~ SLOT FUNCTION FOR HANDLING RESET BUTTON CLICK EVENT ~~~~~~~~~~~~~~~~
     def reset_(self):
+        self.data.data_log = []
         self.data.pulse_reset = self.data.pulse_data
         self.start_time = QTime.currentTime()
         self.test_time.reset()
@@ -466,8 +466,6 @@ class MainWindow(QMainWindow):
             self.ambient_label_value.setText("{}".format(data.data_log[-1][11]))
             self.ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
-        
-        test_time.current_index += 1
 
     def fry_test(self):
         pass
@@ -480,7 +478,7 @@ class DataWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Data")
-        self.setGeometry(1000, 50, 425, 800)
+        self.setGeometry(1050, 50, 425, 800)
         self.setStyleSheet(f"background-color: {PRIMARY_COLOR};")
         # Setup Data Window Layout
         self.layout = QVBoxLayout()

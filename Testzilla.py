@@ -32,6 +32,7 @@ class TestTime:
     def update_time(self):
         self.clock_time = time.time() - self.initial_clock_time
         self.test_time += 1
+        self.current_index += 1
         if self.clock_time - self.test_time > 1:
             self.test_time += 1
         if self.test_time % self.timing_interval == 0:
@@ -45,6 +46,7 @@ class TestTime:
         self.clock_time = 0
         self.test_time = 0
         self.test_time_min = 0
+        self.current_index = 0
 
 #~~~~~~~~~ Get Data and Handle Data Related Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Data:
