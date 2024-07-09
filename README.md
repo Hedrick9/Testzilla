@@ -39,6 +39,8 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Update modbus script 
 - [x] Create Data class for all data related processes
 - [x] Create UI script to isolate UI processes from main script 
+- [x] Change button layout (horizontal versus vertical)
+- [ ] Add analog section on data window
 
 ## Software Requirements:
 ### NI MAX and related drivers: 

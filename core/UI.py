@@ -153,17 +153,26 @@ class MainWindow(QMainWindow):
         # Create a "Start" push button and its slot for handling button click event
         self.start_button = QPushButton("Start")
         self.start_button.setStyleSheet(button_style1)
-        # self.start_button.clicked.connect(lambda: self.start_test())
+        self.start_button.setFixedHeight(40)
         self.start_button.clicked.connect(self.start_test)
         # Create a "Stop" push button
         self.stop_button = QPushButton("Stop")
         self.stop_button.setStyleSheet(button_style2)
+        self.stop_button.setFixedHeight(40)
         self.stop_button.clicked.connect(self.stop_test)
         # Create a "Reset" push button
         self.reset_button = QPushButton("Reset")
         self.reset_button.setStyleSheet(button_style3)
-        # self.reset_button.clicked.connect(lambda: self.reset_())
+        self.reset_button.setFixedHeight(40)
         self.reset_button.clicked.connect(self.reset_)
+
+        self.button_widget = QWidget()
+        self.button_widget.setMaximumHeight(50)
+        self.button_layout = QHBoxLayout(self.button_widget)
+        self.button_layout.addWidget(self.start_button)
+        self.button_layout.addWidget(self.stop_button)
+        self.button_layout.addWidget(self.reset_button)
+
      #~~~~~~~~~ MENU BAR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Create a menu bar object
         self.menubar = self.menuBar()
@@ -263,9 +272,7 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(border_line1)
         self.central_layout.addWidget(self.canvas)
         self.central_layout.addWidget(border_line2)
-        self.central_layout.addWidget(self.start_button)
-        self.central_layout.addWidget(self.stop_button)
-        self.central_layout.addWidget(self.reset_button)
+        self.central_layout.addWidget(self.button_widget)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #       MAIN WINDOW CLASS FUNCTIONS
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
