@@ -60,7 +60,7 @@ class Data:
         self.data_to_write = None
         self.stream = False
         self.last_pulse_data = [0, 0, 0, 0]
-        self.pcfs = [1,0.05, 1, 1] # pcfs = pulse conversion factors
+        self.pcfs = [1,0.1, 1, 1] # pcfs = pulse conversion factors
         self.pulse_data = [0, 0, 0, 0]
         self.pulse_reset = [0, 0, 0, 0]
 

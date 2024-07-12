@@ -298,19 +298,19 @@ class MainWindow(QMainWindow):
         if len(data_log) < 3600 and len(tc_list)>0:
             self.ax.clear()
             for item in tc_list:
-                self.ax.plot(df[1], df[item+11], label=str(item), lw=0.5)
+                self.ax.plot(df[1], df[item+11], label=str(item), lw=0.75)
         elif len(data_log) >= 3600 and len(tc_list)>0:
             self.ax.clear()
             for item in tc_list:
-                self.ax.plot(df[1][-3600:-1], df[item+11][-3600:-1], label=str(item), lw=0.5)
+                self.ax.plot(df[1][-3600:-1], df[item+11][-3600:-1], label=str(item), lw=0.75)
         # Graph tc channel 0 if none selected
         else:
             if len(df) < 3600:
                 self.ax.clear()
-                self.ax.plot(df[1], df[11], label="ambient", lw=0.5)
+                self.ax.plot(df[1], df[11], label="ambient", lw=0.75)
             else:
                 self.ax.clear()
-                self.ax.plot(df[1][-3600:-1], df[11][-3600:-1], label="ambient", lw=0.5)
+                self.ax.plot(df[1][-3600:-1], df[11][-3600:-1], label="ambient", lw=0.75)
         # Format Plot   
         if self.graph_window is not None:
             try:
