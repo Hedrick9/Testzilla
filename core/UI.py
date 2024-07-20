@@ -188,7 +188,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(exit_action)
         # Add an action for new test file
         new_test_action = QAction("New Test", self)
-        new_test_action.triggered.connect(lambda: fu.file_setup(self.test_time.testing, self.tc_modules))
+        # new_test_action.triggered.connect(lambda: fu.file_setup(self.test_time.testing, self.tc_modules))
+        new_test_action.triggered.connect(self.new_test)
         file_menu.addAction(new_test_action)
         # Add an action for copying test file
         copy_file_action = QAction("Create File Copy", self)
@@ -473,6 +474,10 @@ class MainWindow(QMainWindow):
             self.ambient_label_value.setText("{}".format(data.data_log[-1][11]))
             self.ambient_label_value.setStyleSheet("color: #4e94c7; font: 25px; font-weight:;\
                 font-family:{};".format(FONT_STYLE))
+
+    def new_test(self):
+        fu.file_setup(self.test_time.testing, self.tc_modules)
+        self.test_file_label.setText(f"File Name: {fu.file_name}")
 
     def fry_test(self):
         pass
