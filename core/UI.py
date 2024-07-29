@@ -195,7 +195,11 @@ class MainWindow(QMainWindow):
         copy_file_action = QAction("Create File Copy", self)
         copy_file_action.triggered.connect(fu.copy_file)
         file_menu.addAction(copy_file_action)
-        # Add a Setup menu
+         # Add an action for emergency data dump
+        data_dump_action = QAction("Data Dump", self)
+        data_dump_action.triggered.connect(lambda: fu.data_dump(data.data_log, self.test_time.testing))
+        file_menu.addAction(data_dump_action)
+       # Add a Setup menu
         setup_menu = self.menubar.addMenu("Setup")
         # Add an action for Fry Test
         fry_test_action = QAction("Fryer Test", self)
@@ -511,10 +515,15 @@ class DataWindow(QWidget):
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
         label3.setPixmap(QPixmap(f"photos/modbus_{IMAGE_FONT}.png"))
 
-        label4 = QLabel("Analysis:", self)
+        label4 = QLabel("Analog Data:", self)
         label4.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
                 font-family:{}; text-decoration: underline;".format(FONT_STYLE))
-        label4.setPixmap(QPixmap(f"photos/analysis_{IMAGE_FONT}.png"))
+        label4.setPixmap(QPixmap(f"photos/analog_{IMAGE_FONT}.png"))
+
+        label5 = QLabel("Analysis:", self)
+        label5.setStyleSheet("color: #ffffff; font: 14px; font-weight: bold; \
+                font-family:{}; text-decoration: underline;".format(FONT_STYLE))
+        label5.setPixmap(QPixmap(f"photos/analysis_{IMAGE_FONT}.png"))
     #~~~~~ Section 1: Temperature Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.tc_model = QStandardItemModel(8, 8)
         for row in range(8):
@@ -532,7 +541,7 @@ class DataWindow(QWidget):
         table_view1.verticalHeader().setVisible(False)
         table_view1.setFixedHeight(260)
         table_view1.setModel(self.tc_model)
-        table_view1.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px; font-family:{FONT_STYLE};"\
+        table_view1.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};"\
                               "border-style: solid; border-width: 0 1px 1px")
         # Temp Average
         temp_avg_layout1 = QHBoxLayout()
@@ -603,7 +612,7 @@ class DataWindow(QWidget):
         table_view2.horizontalHeader().setVisible(False)
         table_view2.verticalHeader().setVisible(False)
         table_view2.setModel(self.pulse_model)
-        table_view2.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px;"\
+        table_view2.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px;"\
                 f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
 
     #~~~~~~ Section 3: Modbus Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -638,9 +647,24 @@ class DataWindow(QWidget):
         table_view3.horizontalHeader().setVisible(False)
         table_view3.verticalHeader().setVisible(False)
         table_view3.setModel(self.modbus_model)
-        table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 12px;"\
+        table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px;"\
                 f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
-    #~~~~~~ Section 4: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~ Section 4: Analog Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        self.analog_model = QStandardItemModel(1, 1)
+        ai_item1 = QStandardItem("AI 1:  NA")
+        ai_item2 = QStandardItem("AI 2:  NA")
+
+        self.analog_model.setItem(0, 0, ai_item1)
+        self.analog_model.setItem(0, 1, ai_item2)
+
+        table_view4 = QTableView()
+        table_view4.horizontalHeader().setVisible(False)
+        table_view4.verticalHeader().setVisible(False)
+        table_view4.setFixedHeight(40)
+        table_view4.setModel(self.analog_model)
+        table_view4.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px;"\
+                f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
+    #~~~~~~ Section 5: Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.index_label = QLabel("Current Index = NA", self) 
         self.index_label.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};")
         index_layout = QHBoxLayout()
@@ -699,6 +723,8 @@ class DataWindow(QWidget):
         self.layout.addWidget(label3)
         self.layout.addWidget(table_view3)
         self.layout.addWidget(label4)
+        self.layout.addWidget(table_view4)
+        self.layout.addWidget(label5)
         self.layout.addItem(spacer_())
         self.layout.addWidget(self.index_label)
         self.layout.addWidget(self.meter_selection)
@@ -763,6 +789,10 @@ class DataWindow(QWidget):
         self.modbus_model.item(3, 1).setText(f"I_B: {data.mb_data[0][10]}")
         self.modbus_model.item(3, 2).setText(f"I_C: {data.mb_data[0][11]}")
 
+        # Update values in AI section
+        self.analog_model.item(0, 0).setText(f"AI 1:  {data.data_log[-1][9]}")
+        self.analog_model.item(0, 1).setText(f"AI 2:  {data.data_log[-1][10]}")
+        # Update the values in analysis section 
         self.index_label.setText("Current Index = {}".format(test_time.current_index))
         try:
             st_i = int(self.start_index_input.text())

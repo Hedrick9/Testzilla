@@ -1,12 +1,12 @@
 # Testzilla
-An application that provides an intuitive user interface for laboratory testing. A backend designed to interface with multiple DAQ systems.
+An application that provides an intuitive user interface for laboratory testing. A back-end designed to interface with multiple DAQ systems.
 
 ## Testzilla TODO List:
 - [x] Fix format of test time
 - [x] Fix graph config: slect list of items
 - [x] Add custom graph scale feature for y-axis
 - [x] Fix graphing for null/open channels
-- [x] Allow for new file creation
+- [x] Add new file creation feature
 - [ ] Work on config page: 
     - [x] Time sampling
     - [ ] TC offsets: look into file upload
@@ -40,7 +40,8 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Create Data class for all data related processes
 - [x] Create UI script to isolate UI processes from main script 
 - [x] Change button layout (horizontal versus vertical)
-- [ ] Add analog section on data window
+- [x] Add emergency data dump feature 
+- [x] Add analog section on data window
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
