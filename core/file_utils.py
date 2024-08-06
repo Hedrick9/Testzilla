@@ -14,6 +14,7 @@ import sys
 import os
 import csv
 import shutil
+import pandas as pd
 from datetime import date
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~ Creat File Directory  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 current_directory = None
@@ -69,7 +70,7 @@ def copy_file():
 
     shutil.copy2(source_file, destination_file)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Write Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def write_data(data, testing, time_to_write):
     global file_name
     if testing and time_to_write:
@@ -77,6 +78,14 @@ def write_data(data, testing, time_to_write):
             csvWriter = csv.writer(file_data, delimiter=',')
             csvWriter.writerow(data)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data Dump  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def data_dump(data, testing):
+    # cols = list(range(len(data[0]))) 
+    datar = pd.DataFrame(data)
+    destination_file = current_directory + "/Data/" + "data_dump.csv"
+    if not testing:
+        datar.to_csv(destination_file)
+       
 def write_headers(headers):
     global file_name
     # Read the CSV file into a list of lists
@@ -89,3 +98,10 @@ def write_headers(headers):
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
+
+def read_config(config_file="default_config.csv"):
+    file_path = current_directory + "/config/" + config_file
+    configs = pd.read_csv(file_path)
+    return configs
+    
+    

@@ -14,6 +14,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 import pandas as pd
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import core.file_utils as fu
@@ -130,6 +131,8 @@ class MainWindow(QMainWindow):
         self.graph_range = None
      #~~~~~~ CONFIG WINDOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.config_window = None
+        self.configs_window = None
+        self.configs = None
      #~~~~~~~~ PUSH BUTTONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Set push button styles
         button_style1 = f"""QPushButton {{background-color: {BUTTON_COLOR}; 
@@ -244,7 +247,7 @@ class MainWindow(QMainWindow):
         setup_config_action = QAction("Setup Config", self)
         setup_config_action.triggered.connect(self.set_config_window)
         load_config_action = QAction("Load Config", self)
-        #load_config_action.triggered.connect()
+        load_config_action.triggered.connect(self.load_config_window)
         config_menu.addAction(setup_config_action)
         config_menu.addAction(load_config_action)
      #~~~~~~~~ STATUS BAR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,7 +385,7 @@ class MainWindow(QMainWindow):
         self.config_window = QWidget()
         self.config_window.setWindowTitle("Test Configuration Setup")
         self.config_window.setGeometry(200, 200, 300, 200)
-        self.config_window.setStyleSheet(f"background-color: {SECONDARY_COLOR};")
+        self.config_window.setStyleSheet(f"background-color: {PRIMARY_COLOR};")
         
         layout = QVBoxLayout()
         layout.setSpacing(0)
@@ -402,6 +405,48 @@ class MainWindow(QMainWindow):
         self.config_window.setLayout(layout)
         self.config_window.show()
 
+    def load_config_window(self):
+        self.configs_window = QWidget()
+        self.configs_window.setWindowTitle("Load Configuration")
+        self.configs_window.setGeometry(200, 200, 300, 200)
+        self.configs_window.setStyleSheet(f"background-color: {PRIMARY_COLOR};")
+        layout = QVBoxLayout()
+        layout.setSpacing(0)
+
+        # Label to display the selected file name
+        self.config_path_label = QLabel("No file selected")
+        self.config_path_label.setStyleSheet("color: #ffffff; font: 14px;")
+        layout.addWidget(self.config_path_label)
+        
+        # Button to trigger the file dialog
+        button_style = f"""QPushButton {{background-color: {BUTTON_COLOR}; 
+                                          color: #ffffff; 
+                                          font-family:{FONT_STYLE}; 
+                                          font-size: {14}px;}}
+                  QPushButton:hover {{background-color: {SECONDARY_COLOR};}}
+                  QPushButton:pressed {{background-color: #777777;}}"""
+
+        button = QPushButton("Select CSV File")
+        button.setStyleSheet(button_style)
+        button.clicked.connect(self.select_csv_file)
+        layout.addWidget(button)
+        
+        self.configs_window.setLayout(layout)
+        self.configs_window.show()
+
+    def select_csv_file(self):
+        config_path = fu.current_directory+"/config/"
+        file_path, _ = QFileDialog.getOpenFileName(self, 
+                                                   "Open CSV File",
+                                                   config_path,
+                                                   "CSV FIles (*.csv)")
+        if file_path:
+            file_name = os.path.basename(file_path)
+            self.config_path_label.setText(f"Selected File: {file_name}") 
+            self.configs = fu.read_config(file_name) 
+        else:
+            self.config_path_label.setText(f"No file selected") 
+
     #~~~~ SLOT FUNCTION FOR HANDLING START BUTTON CLICK EVENT ~~~~~~~~~~~~~~~~
     def start_test(self):
         self.test_time.testing = True
@@ -418,6 +463,9 @@ class MainWindow(QMainWindow):
         self.status_indicator.setPixmap(pixmap)
         # rewrite headers (if headers were renamed)
         fu.write_headers(self.data_window.retrieve_model_data())
+        # update configs if changed 
+        if self.configs is not None: 
+            self.data.pcfs = [self.configs.elec_pcf[0], self.configs.gas_pcf[0], self.configs.water_pcf[0], self.configs.extra_pcf[0]]
         # reset clocks and begin test sequence
         self.test_file_label.setText(f"File Name: {fu.file_name}")
         self.start_time = QTime.currentTime()

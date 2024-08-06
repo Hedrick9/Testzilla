@@ -7,10 +7,10 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Add custom graph scale feature for y-axis
 - [x] Fix graphing for null/open channels
 - [x] Add new file creation feature
-- [ ] Work on config page: 
+- [x] Work on config page: 
     - [x] Time sampling
-    - [ ] TC offsets: look into file upload
-    - [ ] Logging extra channel specified by user 
+    - [x] TC offsets: look into file upload
+    - [x] Logging extra channel specified by user 
 - [x] Incorporate modbus read capabilites
     - [x] Read in modbus data from Shark meter/General device
     - [x] Determine registers necessary 
