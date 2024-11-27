@@ -108,7 +108,7 @@ if __name__ == "__main__":
     data = Data()
     # Initialize modbus client connection and start reading modbus data
     try:
-        client = mb.init(port="COM4")
+        client = mb.init(port="COM3")
         mb.write_(client, 20000, 5555) # reset energy accumulators    
         thread = threading.Thread(target=mb.data_stream, args=(client, data.mb_data,), daemon=True)
         thread.start()

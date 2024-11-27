@@ -1,6 +1,8 @@
 # Testzilla
 An application that provides an intuitive user interface for laboratory testing. A back-end designed to interface with multiple DAQ systems.
 
+## Testzilla Current Version: 1.01
+
 ## Testzilla TODO List:
 - [x] Fix format of test time
 - [x] Fix graph config: slect list of items
@@ -45,11 +47,7 @@ An application that provides an intuitive user interface for laboratory testing.
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
-***NI MAX:***
-```markdown
-https://knowledge.ni.com/KnowledgeArticleDetails?id=kA03q000000YGQwCAO&l=en-US
-```
-***NI DAQ-mx:***
+***NI MAX & NI DAQ-mx:***
 ```markdown
 https://www.ni.com/en/support/downloads/drivers/download.ni-daq-mx.html#521556
 ```
