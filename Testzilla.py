@@ -82,7 +82,7 @@ class Data:
             ni_data = list(np.around(np.array(self.ni_data),2))
             data = self.mb_data[0][:3] + \
             list(np.multiply(self.pcfs, np.array(ni_data[:4])-np.array(self.pulse_reset))) + \
-            [None if x > 3500 else x for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
+            [x if -100 < x < 3500 else None for x in ni_data[4:]] # replace pulse_reset with last_pulse_data for interval pulses
             self.data_log.append(time_data.copy()+data)
             self.pulse_data = list(np.array(ni_data[:4])-np.array(self.last_pulse_data))
             self.last_pulse_data = ni_data[:4]
