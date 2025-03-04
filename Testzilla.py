@@ -138,7 +138,7 @@ if __name__ == "__main__":
         # Create PySide application object
         app = QApplication()
         app.setWindowIcon(QIcon("photos/tz-icon.png")) 
-        mw = UI.MainWindow(data, test_time, status, timer)
+        mw = UI.MainWindow(data, ni_daq, test_time, status, timer)
         # Show the application and start the PySide6 event loop
         mw.show()
         # Create Data directory if it does not exist

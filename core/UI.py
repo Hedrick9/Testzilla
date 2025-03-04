@@ -43,14 +43,14 @@ def spacer_():
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, data, test_time, status, timer):
+    def __init__(self, data, ni_daq, test_time, status, timer):
         super().__init__()
         # Initialize parameters as instance variables
         self.data = data
         self.test_time = test_time
         self.status = status
         self.timer = timer
-        self.tc_modules = data.tc_modules
+        self.tc_modules = ni_daq.tc_modules
         # Initialize other window classes and variables
         self.start_time = QTime.currentTime()
         self.data_window = DataWindow()
