@@ -51,8 +51,8 @@ class TestTime:
 #~~~~~~~~~ Get Data and Handle Data Related Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Data:
 
-    def __init__(self):
-        self.ni_daq = ni.NI()
+    def __init__(self, ni_daq):
+        self.ni_daq = ni_daq
         self.tc_modules = self.ni_daq.tc_modules
         self.ni_data = [None]*22
         self.mb_data = [[0]*13]
@@ -60,12 +60,12 @@ class Data:
         self.data_to_write = None
         self.stream = False
         self.last_pulse_data = [0, 0, 0, 0]
-        self.pcfs = [1,0.1, 1, 1] # pcfs = pulse conversion factors
+        self.pcfs = [1,0.0125, 1, 1] # pcfs = pulse conversion factors
         self.pulse_data = [0, 0, 0, 0]
         self.pulse_reset = [0, 0, 0, 0]
 
     def update_ni_data(self):
-        self.ni_data = self.ni_daq.read_all()
+        self.ni_data = self.ni_daq.read_all_tz()
 
     def read_ni_data(self):
         return self.ni_data
@@ -105,6 +105,9 @@ if __name__ == "__main__":
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initializes Data object and begin ni DAQ processes
+
+    ni_daq = ni.NI()
+    ni_daq.setup_testzilla()
     data = Data()
     # Initialize modbus client connection and start reading modbus data
     try:
