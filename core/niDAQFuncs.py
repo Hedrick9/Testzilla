@@ -302,6 +302,7 @@ class NI:
             data.extend(self.task_dict["tc_task1"].read())
         elif self.tc_modules == 2:
             data.extend(self.task_dict["tc_task1"].read())
+            data.extend(self.task_dict["tc_task2"].read())
         else:
             data.extend([0]*16)
         return data
