@@ -269,7 +269,7 @@ class NI:
             self.setup_ai_volt()
         elif self.ai_current_slot is not None:
             self.setup_ai_current()
-        else: pass
+        else: print("Unable to connect to analog voltage input module NI-9215")
         # self.setup_tc()
     #~~ Setup all modules relevant to CKV program 
     def setup_ckv(self):
@@ -347,6 +347,7 @@ class NI:
             data.extend(self.read_ai_volt_data()[:2]) # read analog input data
         elif self.ai_current_slot is not None:
             data.extend(self.read_ai_current_data()[:2])
+        else: data.extend([0,0])
         data.extend(self.read_tc_data()) # read thermocouple data
         return data
     #~~~~ Class method for writing to NI-9264 tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~
