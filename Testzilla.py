@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     ni_daq = ni.NI()
     ni_daq.setup_testzilla()
-    data = Data()
+    data = Data(ni_daq)
     # Initialize modbus client connection and start reading modbus data
     try:
         client = mb.init(port="COM3")
