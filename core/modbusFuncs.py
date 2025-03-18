@@ -12,6 +12,7 @@
 import minimalmodbus
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder 
+import serial
 import time
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                   Initialize modbus and connect to client
@@ -116,19 +117,23 @@ def get_all(client):
         return None
 
 
-def data_stream(client, stack):
+def data_stream(client, data):
     """
     Read modbus data continuously. Function designed for threading.
     """
     while True:    
         try:
             mb_data = list(get_all(client))
+            stack = data.mb_data
             if len(stack) > 0:
                 stack.pop(0)
             stack.append(mb_data)
             time.sleep(0.1)
+            data.mb_connected = True
         except TypeError:
             pass
+        except serial.serialutil.SerialException:
+            data.mb_connected = False
         except Exception as e:
             print(e)
 

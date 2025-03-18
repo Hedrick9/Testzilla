@@ -56,6 +56,7 @@ class Data:
         self.tc_modules = ni_daq.tc_modules
         self.ni_data = [None]*22
         self.mb_data = [[0]*13]
+        self.mb_connected = False
         self.data_log = []
         self.data_to_write = None
         self.stream = False
@@ -113,12 +114,14 @@ if __name__ == "__main__":
     try:
         client = mb.init(port="COM3")
         mb.write_(client, 20000, 5555) # reset energy accumulators    
-        thread = threading.Thread(target=mb.data_stream, args=(client, data.mb_data,), daemon=True)
+        thread = threading.Thread(target=mb.data_stream, args=(client, data,), daemon=True)
         thread.start()
+        data.mb_connected = True
     except Exception as e:
         status.append("Unable to connect to modbus device.")
         print("Unable to connect to modbus device.")
         data.mb_data = [list(np.zeros(13))]
+        data.mb_connected = False
 
  #~~~~~~~ USE THIS SECTION TO THREAD NI DATA PROCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~
     data.stream = True
@@ -160,8 +163,6 @@ if __name__ == "__main__":
         timer.timeout.connect(mw.data_window.retrieve_model_data)
 
         app.exec()
-    except KeyboardInterrupt:
-        print("Programa Terminado.")
     except Exception as e:
         print(e)
 
