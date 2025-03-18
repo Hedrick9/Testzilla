@@ -30,6 +30,7 @@ BUTTON_COLOR = "#0a0a0a"
 FONT_COLOR1 = "#ffffff"
 # DATA_FONT = "#b5b5b5"
 DATA_FONT = "#ffffff"
+ERROR_FONT = "#b8494d"
 GRID_COLOR = "#03fcd3"
 BORDER_COLOR = "#ffffff"
 IMAGE_FONT = "nasa"
@@ -691,12 +692,11 @@ class DataWindow(QWidget):
         self.modbus_model.setItem(3, 1, mb_item11)
         self.modbus_model.setItem(3, 2, mb_item12)
 
-        table_view3 = QTableView()
-        table_view3.horizontalHeader().setVisible(False)
-        table_view3.verticalHeader().setVisible(False)
-        table_view3.setModel(self.modbus_model)
-        table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px;"\
-                f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
+        self.table_view3 = QTableView()
+        self.table_view3.horizontalHeader().setVisible(False)
+        self.table_view3.verticalHeader().setVisible(False)
+        self.table_view3.setModel(self.modbus_model)
+
     #~~~~~~ Section 4: Analog Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.analog_model = QStandardItemModel(1, 1)
         ai_item1 = QStandardItem("AI 1:  NA")
@@ -769,7 +769,7 @@ class DataWindow(QWidget):
         self.layout.addWidget(label2)
         self.layout.addWidget(table_view2)
         self.layout.addWidget(label3)
-        self.layout.addWidget(table_view3)
+        self.layout.addWidget(self.table_view3)
         self.layout.addWidget(label4)
         self.layout.addWidget(table_view4)
         self.layout.addWidget(label5)
@@ -824,6 +824,13 @@ class DataWindow(QWidget):
             self.pulse_model.item(2, i).setText(f"Total: {data.data_log[-1][i+5]:.2f}")
 
         # Update the values in modbus table
+        if data.mb_connected == True:
+            self.table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px;"\
+                    f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
+        elif data.mb_connected == False:
+            self.table_view3.setStyleSheet(f"background-color: {DT_COLOR}; color: {ERROR_FONT}; font: 14px;"\
+                    f"font-family:{FONT_STYLE}; border-style: solid; border-width: 0 1px 1px 1px;")
+
         self.modbus_model.item(0, 0).setText(f"Avg. Voltage: {data.mb_data[0][0]}")
         self.modbus_model.item(0, 1).setText(f"Watts: {data.mb_data[0][1]}")
         self.modbus_model.item(0, 2).setText(f"Electrical Energy: {data.mb_data[0][2]}")
