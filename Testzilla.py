@@ -53,7 +53,7 @@ class Data:
 
     def __init__(self, ni_daq):
         self.ni_daq = ni_daq
-        self.tc_modules = self.ni_daq.tc_modules
+        self.tc_modules = ni_daq.tc_modules
         self.ni_data = [None]*22
         self.mb_data = [[0]*13]
         self.data_log = []
@@ -120,13 +120,13 @@ if __name__ == "__main__":
         print("Unable to connect to modbus device.")
         data.mb_data = [list(np.zeros(13))]
 
- #~~~~~~~ ONLY USE SECTION BELOW FOR 4 CHANNEL TC MODULE ~~~~~~~~~~~~~~~~~~~~~~~
-    # data.stream = True
-    # try:
-    #     thread = threading.Thread(target=data.ni_stream, args=(), daemon=True)
-    #     thread.start()
-    # except Exception as e:
-    #     print("Unable to connect to ni DAQ.")
+ #~~~~~~~ USE THIS SECTION TO THREAD NI DATA PROCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    data.stream = True
+    try:
+        thread = threading.Thread(target=data.ni_stream, args=(), daemon=True)
+        thread.start()
+    except Exception as e:
+        print("Unable to connect to ni DAQ.")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                Initialize Application and Start Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,13 +144,13 @@ if __name__ == "__main__":
         # Create Data directory if it does not exist
         fu.create_directory()
         # Create new CSV Test File
-        fu.file_setup(test_time.testing, data.tc_modules)
+        fu.file_setup(test_time.testing, ni_daq.tc_modules)
         status.append("Adding new file: {}".format(fu.file_name))
     #~~~~~~ Timing Sequence ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         timer.start(1000)
         # timer event executions
         timer.timeout.connect(test_time.update_time)
-        timer.timeout.connect(data.update_ni_data)
+        # timer.timeout.connect(data.update_ni_data)
         timer.timeout.connect(lambda: data.get_data(test_time))
         timer.timeout.connect(lambda: mw.update_plot(data.data_log))
         timer.timeout.connect(lambda: mw.data_window.update_data(data, test_time))

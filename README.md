@@ -1,7 +1,7 @@
 # Testzilla
 An application that provides an intuitive user interface for laboratory testing. A back-end designed to interface with multiple DAQ systems.
 
-## Testzilla Current Version: 2.02
+## Testzilla Current Version: 2.03
 
 ## Testzilla TODO List:
 - [x] Fix format of test time
