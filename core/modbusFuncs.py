@@ -132,8 +132,10 @@ def data_stream(client, data):
             data.mb_connected = True
         except TypeError:
             pass
-        except serial.serialutil.SerialException:
+        except serial.serialutil.SerialException: # Connection Lost
             data.mb_connected = False
+        except minimalmodbus.InvalidResponseError: # Invalid Response
+            pass # Ignore missed package 
         except Exception as e:
             print(e)
 
