@@ -12,13 +12,6 @@ Description:
 The following script focuses on the native UI.
 
 """
-# Module/Program Name: UI.py
-# Module Description:
-# The following script focuses on the native UI..
-# Original Author: Russell Hedrick
-# Original Date: 06/24/2024
-# Last Edit: 06/24/2024
-# Edit Description:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
