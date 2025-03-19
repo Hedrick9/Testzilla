@@ -1,4 +1,17 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 HEADER 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Title:       modbusFuncs.py 
+Origin Date: 06/24/2024
+Revised:     03/18/2025
+Author(s):   Russell Hedrick
+Contact:     rhedrick@frontierenergy.com
+Description:
+
+The following script focuses on the native UI.
+
+"""
 # Module/Program Name: UI.py
 # Module Description:
 # The following script focuses on the native UI..
@@ -739,6 +752,7 @@ class DataWindow(QWidget):
         self.meter_selection.addItem("Gas Meter")
         self.meter_selection.addItem("120V Meter")
         self.meter_selection.addItem("208V Meter")
+        self.meter_selection.addItem("Water Meter")
         # meter_selection.currentIndexChanged.connect(handle_meter_selection)
         energy_rate_layout = QHBoxLayout()
         hhv_label = QLabel(" HHV =            ")
@@ -857,7 +871,7 @@ class DataWindow(QWidget):
             ti = data.data_log[st_i][1]
             tf = data.data_log[et_i][1]
             self.er_time_label.setText(f" Start Time = {ti}     |     End Time = {tf}")
-            meter_ix = {"Gas Meter": 6, "120V Meter": 5, "208V Meter":4}[self.meter_selection.currentText()]
+            meter_ix = {"Gas Meter": 6, "120V Meter": 5, "208V Meter":4, "Water Meter": 7}[self.meter_selection.currentText()]
             er_calc = (data.data_log[et_i][meter_ix] - data.data_log[st_i][meter_ix])*hhv*gcf/((tf-ti)/60)
             self.energy_rate_label.setText(f" Energy Rate = {round(er_calc,1)}")
         except ValueError as e:

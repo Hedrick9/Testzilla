@@ -1,11 +1,21 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Module/Program Name: NiDAQFuncs.py
-# Module Description:
-# The following program is to read data from the ni-cDAQ-9178 using the nidaqmx lib.
-# Original Author: Russell Hedrick
-# Original Date: 04/28/2023
-# Last Edit: 02/23/2025
-# Edit Description:
+"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 HEADER 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Title:       niDAQFuncs.py 
+Origin Date: 04/28/2023
+Revised:     03/18/2025
+Author(s):   Russell Hedrick
+Contact:     rhedrick@frontierenergy.com
+Description:
+
+The following script is designed to interface with the relevant ni modules 
+using the nidaqmx library. When an NI class object is instantiated, it will 
+detect the modules connected, and create tasks associated with each module.
+Most setup and read tasks created are designed specifically for FSTC and CKV 
+lab use.
+
+"""
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                   Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,53 +52,35 @@ class NI:
                 self.ai_volt_slot = count # Check which slot ai voltage module is in 
             elif device.product_type == "NI 9264":
                 self.ao_volt_slot = count # Check which slot ao voltage module is in 
-    #~~~~~ Load tasks created in MAX (Measurement & Automation Explorer)
-        p_tasks = self.system.tasks.task_names # list of all persisted tasks in memory
-        # To Load Persisted Tasks by index instead of name:
-        # ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask(system.tasks.task_names[0])
-        try:
-            # Create a persisted task - Loads the existing task from memory
-            if "tc_task1" in p_tasks:
-                ptask1 = nidaqmx.system.storage.persisted_task.PersistedTask("tc_task1")
-                tc_task1 = ptask1.load() # this task can now be used as others shown above
-                self.task_dict["tc_task1"] = tc_task1
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #               Class Methods for Reading Persisted Tasks from MAX
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    """
+    Read in persisted tasks that were created within ni MAX (Measurement &
+    Automation Explorer).
+    """ 
+    def load_ptask(self, task_name):
+        p_tasks = self.system.tasks.task_names
+        try:    
+            if task_name in p_tasks:
+                p_task = nidaqmx.system.storage.persisted_task.PersistedTask(task_name)
+                task = p_task.load()
+                self.task_dict[task_name] = task
+            else:
+                print(f"Unable to load persisted task from ni MAX: {task_name}")
+                task = None
+                self.task_dict[task_name] = task
         except Exception as e:
-            print(f"Unable to load task from NI-MAX: tc_task1") # system.tasks.task_names[1]
-            tc_task1 = None
-            self.task_dict["tc_task1"] = tc_task1
-        try:
-            # Create a persisted task - Loads the existing task from memory
-            if "tc_task2" in p_tasks:
-                ptask2 = nidaqmx.system.storage.persisted_task.PersistedTask("tc_task2")
-                tc_task2 = ptask2.load() # this task can now be used as others shown above
-                self.task_dict["tc_task2"] = tc_task2
-        except Exception as e:
-            print(f"Unable to load task from NI-MAX: tc_task2") # system.tasks.task_names[2]
-            tc_task2 = None
-            self.task_dict["tc_task2"] = tc_task2
-
+            print(f"Unable to load persisted task from ni MAX: {task_name}")
+            task = None
+            self.task_dict[task_name] = task
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #               Class Methods for Setting Up Tasks for NI Modules
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """
-        Configure specific tasks such as counters. These methods are done for 
-        all tasks not created through ni MAX. 
-        """ 
-        #~~~~~ Configure NI-DAQ Modules ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        ## Configure NI-9214 thermocouple module (EXAMPLE)
-        #try:
-        #    for channel in system.devices[tc_slot1].ai_physical_chans:
-        #        tc_task.ai_channels.add_ai_thrmcpl_chan(channel.name,
-        #                units=nidaqmx.constants.TemperatureUnits.DEG_F,
-        #                thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
-        #                cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
-        #        tc_task.timing.cfg_samp_clk_timing(fs,
-        #                source="",
-        #                sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
-        #except Exception as e:
-        #    return "Unable to connect to thermocouple module NI-9214"
-
+    """
+    Configure specific tasks such as counters. These methods are done for 
+    all tasks not created through ni MAX. 
+    """ 
     #~~~~ Class method for setting up NI-9203 Analog Input Current Module ~~~~~
     def setup_ai_current(self):
         # Configure NI-9203 analog input current module if connected 
@@ -246,7 +238,7 @@ class NI:
     def setup_tc(self):
         if self.tc_modules > 0 and self.four_chan == True:
             tc_task1 = nidaqmx.Task() 
-            for channel in self.system.devices[1].ai_physical_chans:
+            for channel in self.system.devices[self.tc_modules].ai_physical_chans:
                 tc_task1.ai_channels.add_ai_thrmcpl_chan(channel.name,
                        units=nidaqmx.constants.TemperatureUnits.DEG_F,
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
@@ -259,11 +251,38 @@ class NI:
                        units=nidaqmx.constants.TemperatureUnits.DEG_F,
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                        cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
+            tc_task1.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
             self.task_dict["tc_task1"] = tc_task1
+        elif self.tc_modules == 2 and self.four_chan == False:
+            tc_task1 = nidaqmx.Task()
+            for channel in self.system.devices[1].ai_physical_chans:
+                if channel.name.split('/')[1] == "ai0":
+                    tc_task1.ai_channels.add_ai_thrmcpl_chan(channel.name,
+                       units=nidaqmx.constants.TemperatureUnits.DEG_F,
+                       thermocouple_type=nidaqmx.constants.ThermocoupleType.T,
+                       cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
+                else:
+                    tc_task1.ai_channels.add_ai_thrmcpl_chan(channel.name,
+                       units=nidaqmx.constants.TemperatureUnits.DEG_F,
+                       thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
+                       cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
+            tc_task2 = nidaqmx.Task()
+            for channel in self.system.devices[2].ai_physical_chans:
+                tc_task2.ai_channels.add_ai_thrmcpl_chan(channel.name,
+                    units=nidaqmx.constants.TemperatureUnits.DEG_F,
+                    thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
+                    cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
+            tc_task1.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
+            tc_task2.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
+            self.task_dict["tc_task1"] = tc_task1
+            self.task_dict["tc_task2"] = tc_task2
         else:
            print("Unable to connect to thermocouple module NI-9214")
     #~~ Setup all modules relevant to Testzilla program 
     def setup_testzilla(self):
+        print("Initializing Testzilla setup...")
+        self.load_ptask("tc_task1")
+        self.load_ptask("tc_task2")
         self.setup_ci()
         if self.ai_volt_slot is not None:
             self.setup_ai_volt()

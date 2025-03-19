@@ -1,7 +1,7 @@
 # Testzilla
 An application that provides an intuitive user interface for laboratory testing. A back-end designed to interface with multiple DAQ systems.
 
-## Testzilla Current Version: 2.03
+## Testzilla Current Version: 2.04
 
 ## Testzilla TODO List:
 - [x] Fix format of test time
@@ -34,16 +34,18 @@ An application that provides an intuitive user interface for laboratory testing.
 - [x] Logging data for intervals greater than 1 second
 - [x] Swap upper and lower bound for graph range
 - [x] Create table for modbus data in data window
-- [ ] Add fry test capability
-- [ ] Add burger test capability
 - [x] Test Analog input reading w/ RH meter (avg various readings?)
 - [x] Update ni script for greater configuration flexibility 
-- [ ] Update modbus script 
 - [x] Create Data class for all data related processes
 - [x] Create UI script to isolate UI processes from main script 
 - [x] Change button layout (horizontal versus vertical)
 - [x] Add emergency data dump feature 
 - [x] Add analog section on data window
+- [ ] Add fry test capability
+- [ ] Add burger test capability
+- [ ] Update modbus script 
+    - [ ] Investigate Alternative Libraries
+    - [ ] Allow for manual reboot
 
 ## Software Requirements:
 ### NI MAX and related drivers: 

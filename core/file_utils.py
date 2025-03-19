@@ -1,14 +1,20 @@
+"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 HEADER 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Title:       file_utils.py 
+Origin Date: 05/20/2023
+Revised:     08/06/2024
+Author(s):   Russell Hedrick
+Contact:     rhedrick@frontierenergy.com
+Description:
+
+The following script is designed to handle all file related tasks such as, 
+file creation, file copying, data writing, etc.
+
+"""
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Module/Program Name: file_utils.py
-# Module Description:
-# The following program is designed to handle all file related tasks such as, 
-# creating files, copying files, writing data, etc.
-# Original Author: Russell Hedrick
-# Original Date: 05/20/2023
-# Last Edit: 
-# Edit Description:
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                                   Imports 
+#                               Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import sys
 import os

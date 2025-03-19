@@ -1,11 +1,18 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Module/Program Name: modbusFuncs.py
-# Module Description:
-# The following program is to read in modbus RTU data via RS485 (RS485 to USB).
-# Original Author: Russell Hedrick
-# Original Date: 06/23/2023
-# Last Edit: 06/23/2023 
-# Edit Description:
+"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 HEADER 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Title:       modbusFuncs.py 
+Origin Date: 06/23/2023
+Revised:     03/18/2025
+Author(s):   Russell Hedrick
+Contact:     rhedrick@frontierenergy.com
+Description:
+
+The following script is designed to interface with devices via modbus RTU. 
+The assumption is that the hardware setup is RS485 converted to USB.
+
+"""
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                   Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,7 +36,7 @@ def init(
     with a client/device at a specified port
     Modbus RTU configuration:
     port - Serial port (USB port on computer: Use device manager to locate)
-    baudrate - bit rate or communication speed (9600 by default)
+    baudrate - bit rate or communication speed (19200 by default)
     bytesize - size of each register response 
     parity - none
     """
