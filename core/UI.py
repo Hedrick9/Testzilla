@@ -23,7 +23,9 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 import core.file_utils as fu
+import core.modbusFuncs as mb 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                Constants
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,6 +221,10 @@ class MainWindow(QMainWindow):
         burger_test_action = QAction("Burger Test", self)
         burger_test_action.triggered.connect(self.burger_test)
         setup_menu.addAction(burger_test_action)
+        # Add an action for connecting to Shark 200 meter 
+        shark200_action = QAction("Connect to Shark200", self)
+        shark200_action.triggered.connect(lambda: data.modbus_thread(device="Shark200"))
+        setup_menu.addAction(shark200_action)
         # Add a Data menu
         data_menu = self.menubar.addMenu("Data")
         # Add an action to the Data menu

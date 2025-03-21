@@ -42,16 +42,22 @@ class NI:
             if device.product_type == "NI 9211":
                 self.tc_modules += 1
                 self.four_chan = True
+                self.connected = True
             elif device.product_type == "NI 9214":
                 self.tc_modules += 1
+                self.connected = True
             elif device.product_type == "NI 9411":
                 self.ci_slot = count # Check which slot ci module is in 
+                self.connected = True
             elif device.product_type == "NI 9203":
                 self.ai_current_slot = count # Check which slot ai current module is in 
+                self.connected = True
             elif device.product_type == "NI 9215":
                 self.ai_volt_slot = count # Check which slot ai voltage module is in 
+                self.connected = True
             elif device.product_type == "NI 9264":
                 self.ao_volt_slot = count # Check which slot ao voltage module is in 
+                self.connected = True
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #               Class Methods for Reading Persisted Tasks from MAX
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -398,10 +404,10 @@ if __name__ == "__main__":
     #print(len(system.devices))
     
     ni = NI()
-    ni.setup_ckv()
-    ni.write_ao_volt(0, 0)
-    cv = ni.read_all_ckv()
-    print(cv)
+    ni.setup_testzilla()
+    # ni.write_ao_volt(0, 0)
+    # cv = ni.read_all_ckv()
+    # print(cv)
     print(ni.connected)
     ni.close_daq()
 

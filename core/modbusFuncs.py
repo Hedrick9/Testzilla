@@ -141,6 +141,7 @@ def data_stream(client, data):
             pass
         except serial.serialutil.SerialException: # Connection Lost
             data.mb_connected = False
+            time.sleep(1)
         except minimalmodbus.InvalidResponseError: # Invalid Response
             pass # Ignore missed package 
         except Exception as e:

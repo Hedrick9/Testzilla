@@ -1,10 +1,6 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           IMPORTS/Libraries 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import core.UI as UI
-import core.file_utils as fu
-import core.niDAQFuncs as ni 
-import core.modbusFuncs as mb
 import pandas as pd
 import numpy as np
 import time
@@ -13,6 +9,11 @@ from datetime import date, datetime, timedelta
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import QIcon
+
+import core.UI as UI
+import core.file_utils as fu
+import core.niDAQFuncs as ni 
+import core.modbusFuncs as mb
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                           Classes & Functions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +74,15 @@ class Data:
 
     def ni_stream(self):
         while self.stream == True:
-            self.update_ni_data()
+            try: 
+                if self.ni_daq.connected == True:
+                    self.update_ni_data()
+                else: 
+                    self.stream = False
+                    self.ni_data = [0]*22
+            except Exception as e:
+                print("The connection with the ni DAQ was lost.")
+                self.stream = False
 
     def get_data(self, test_time):
         tod = datetime.now().strftime("%H:%M:%S")
@@ -96,6 +105,20 @@ class Data:
             average_data = pd.DataFrame(self.data_log[-test_time.timing_interval:].copy()).drop(columns=[0,1,4,5,6,7,8]).mean()
             _write = [*average_data[0:2], *self.data_log[-1][4:9], *average_data[2:]]
             self.data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
+
+    def modbus_thread(self, device, port="COM6"):
+        # Initialize modbus client connection and start reading modbus data
+        print(f"Attempting to connect to device: {device}")
+        try:
+            client = mb.init(port=port)
+            mb.write_(client, 20000, 5555) # reset energy accumulators    
+            thread = threading.Thread(target=mb.data_stream, args=(client, self,), daemon=True)
+            thread.start()
+            self.mb_connected = True
+        except Exception as e:
+            print(f"Failed to establish connection w/ modbus device: {device}")
+            self.mb_data = [list(np.zeros(13))]
+            self.mb_connected = False
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Startup Application
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,23 +129,12 @@ if __name__ == "__main__":
 #                            Initialize DAQ(s)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initializes Data object and begin ni DAQ processes
-
     ni_daq = ni.NI()
     ni_daq.setup_testzilla()
     data = Data(ni_daq)
     # Initialize modbus client connection and start reading modbus data
-    try:
-        client = mb.init(port="COM3")
-        mb.write_(client, 20000, 5555) # reset energy accumulators    
-        thread = threading.Thread(target=mb.data_stream, args=(client, data,), daemon=True)
-        thread.start()
-        data.mb_connected = True
-    except Exception as e:
-        status.append("Unable to connect to modbus device.")
-        print("Unable to connect to modbus device.")
-        data.mb_data = [list(np.zeros(13))]
-        data.mb_connected = False
-
+    data.modbus_thread(device="Shark200", port="COM6")
+    # data.modbus_thread(port="COM6", device="Shark200", data=data)
  #~~~~~~~ USE THIS SECTION TO THREAD NI DATA PROCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~
     data.stream = True
     try:
