@@ -106,7 +106,7 @@ class Data:
             _write = [*average_data[0:2], *self.data_log[-1][4:9], *average_data[2:]]
             self.data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
 
-    def modbus_thread(self, device, port="COM6"):
+    def modbus_thread(self, device, port="COM3"):
         # Initialize modbus client connection and start reading modbus data
         print(f"Attempting to connect to device: {device}")
         try:
@@ -133,8 +133,7 @@ if __name__ == "__main__":
     ni_daq.setup_testzilla()
     data = Data(ni_daq)
     # Initialize modbus client connection and start reading modbus data
-    data.modbus_thread(device="Shark200", port="COM6")
-    # data.modbus_thread(port="COM6", device="Shark200", data=data)
+    data.modbus_thread(device="Shark200", port="COM3")
  #~~~~~~~ USE THIS SECTION TO THREAD NI DATA PROCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~
     data.stream = True
     try:
