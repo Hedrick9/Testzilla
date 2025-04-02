@@ -4,7 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Title:       niDAQFuncs.py 
 Origin Date: 04/28/2023
-Revised:     03/18/2025
+Revised:     04/02/2025
 Author(s):   Russell Hedrick
 Contact:     rhedrick@frontierenergy.com
 Description:
@@ -19,6 +19,8 @@ lab use.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                                   Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import numpy as np
+
 import nidaqmx
 import nidaqmx.system
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,6 +73,8 @@ class NI:
             if task_name in p_tasks:
                 p_task = nidaqmx.system.storage.persisted_task.PersistedTask(task_name)
                 task = p_task.load()
+                task.start()
+                task.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
                 self.task_dict[task_name] = task
             else:
                 print(f"Unable to load persisted task from ni MAX: {task_name}")
@@ -317,7 +321,7 @@ class NI:
         else:
             data.extend([0,0,0,0])
         return data
-    #~~~~ Class method for reading data from ni 9214 module ~~~~~~~~~~~~~~~~~~~
+    #~~~~ Class method for reading on-demand data from ni 9214 module ~~~~~~~~~
     def read_tc_data(self):
         data = []
         if self.four_chan == True: 
@@ -331,6 +335,26 @@ class NI:
         else:
             data.extend([0]*16)
         return data
+    #~~~~ Class method for reading continuous data from ni 9214 module ~~~~~~~~
+    def read_tc_data_continuous(self):
+        data = []
+        if self.four_chan == True: 
+            raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+            data = np.array(raw, dtype=float).mean(axis=1).tolist()
+            data = data + [0]*(16-len(data))
+        elif self.tc_modules == 1 and self.four_chan == False:
+            raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+            data = np.array(raw, dtype=float).mean(axis=1).tolist()
+        elif self.tc_modules == 2:
+            raw1 = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+            raw2 = self.task_dict["tc_task2"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+            data = np.array(raw1, dtype=float).mean(axis=1).tolist()
+            data2 = np.array(raw2, dtype=float).mean(axis=1).tolist()
+            data.extend(data2)
+        else:
+            data.extend([0]*16)
+        return data
+
     #~~~~ Class method for reading data from NI-9226 module ~~~~~~~~~~~~~~~~~~~
     def read_rtd_data(self):
         data = []
@@ -374,7 +398,7 @@ class NI:
         elif self.ai_current_slot is not None:
             data.extend(self.read_ai_current_data()[:2])
         else: data.extend([0,0])
-        data.extend(self.read_tc_data()) # read thermocouple data
+        data.extend(self.read_tc_data_continuous()) # read thermocouple data
         return data
     #~~~~ Class method for writing to NI-9264 tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def write_ao_volt(self, channel, voltage):
@@ -406,8 +430,7 @@ if __name__ == "__main__":
     ni = NI()
     ni.setup_testzilla()
     # ni.write_ao_volt(0, 0)
-    # cv = ni.read_all_ckv()
-    # print(cv)
+#    raw_data = ni.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
     print(ni.connected)
     ni.close_daq()
 
