@@ -12,6 +12,7 @@ from PySide6.QtGui import QIcon
 
 import core.UI as UI
 import core.file_utils as fu
+import core.sys_utils as sus
 import core.niDAQFuncs as ni 
 import core.modbusFuncs as mb
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +22,7 @@ import core.modbusFuncs as mb
 class TestTime:
 
     def __init__(self, timing_interval=1):
-        self.initial_clock_time = time.time()
+        self.initial_clock_time = time.monotonic()
         self.clock_time = 0
         self.test_time = 0
         self.test_time_min = 0
@@ -31,7 +32,7 @@ class TestTime:
         self.time_to_write = False
 
     def update_time(self):
-        self.clock_time = time.time() - self.initial_clock_time
+        self.clock_time = time.monotonic() - self.initial_clock_time
         self.test_time += 1
         self.current_index += 1
         if self.clock_time - self.test_time > 1:
@@ -43,7 +44,7 @@ class TestTime:
             self.time_to_write = False
 
     def reset(self):
-        self.initial_clock_time = time.time()
+        self.initial_clock_time = time.monotonic()
         self.clock_time = 0
         self.test_time = 0
         self.test_time_min = 0
@@ -106,7 +107,7 @@ class Data:
             _write = [*average_data[0:2], *self.data_log[-1][4:9], *average_data[2:]]
             self.data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
 
-    def modbus_thread(self, device, port="COM3"):
+    def modbus_thread(self, device, port="COM6"):
         # Initialize modbus client connection and start reading modbus data
         print(f"Attempting to connect to device: {device}")
         try:
@@ -145,6 +146,7 @@ if __name__ == "__main__":
 #                Initialize Application and Start Event Loop
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     try:
+        sus.prevent_sleep() # Keep system awake while application is running
         test_time = TestTime(1) # Initialize timing object with 1 second timing_interval
         # Create a QTimer for event loop
         timer = QTimer() 
@@ -179,4 +181,5 @@ if __name__ == "__main__":
 
     finally:
         data.ni_daq.close_daq()
+        sus.allow_sleep()
 
