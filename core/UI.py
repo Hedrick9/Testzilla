@@ -237,7 +237,7 @@ class MainWindow(QMainWindow):
         self.graph_menu = QMenu("Graph", self.menubar)
         self.tc_items = []
         for i in range(self.tc_modules*16):
-            item = QAction("Temp {}".format(i), self.graph_menu, checkable=True)
+            item = QAction(f"Temp {i}", self.graph_menu, checkable=True)
             self.tc_items.append(item)
         self.menubar.addMenu(self.graph_menu)
         
@@ -393,28 +393,45 @@ class MainWindow(QMainWindow):
         time_dict = {0: 1, 1: 5, 2: 30, 3: 60}
         self.test_time.timing_interval = time_dict[index]
 
+    def handle_port_selection(self, index):
+        port_dict = {0: "COM3", 1: "COM4", 2: "COM5", 3: "COM6"}
+        self.data.mb_port = port_dict[index]
+        print(self.data.mb_port)
+
     #~~~ CONFIGURATION SETTING FUNCTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def set_config_window(self):
         self.config_window = QWidget()
         self.config_window.setWindowTitle("Test Configuration Setup")
-        self.config_window.setGeometry(200, 200, 300, 200)
+        self.config_window.setGeometry(200, 200, 300, 150)
         self.config_window.setStyleSheet(f"background-color: {PRIMARY_COLOR};")
         
         layout = QVBoxLayout()
         layout.setSpacing(0)
-    
+        # Test Time Update Rate 
         label1 = QLabel("Set Test Time Interval:")
         label1.setStyleSheet("color: #ffffff; font: 14px;")
         time_selection = QComboBox()
-        time_selection.setStyleSheet("color: #ffffff; font: 14px;")
+        time_selection.setStyleSheet("background-color:#222; color: #ffffff; font: 14px;")
         time_selection.addItem("1 second")
         time_selection.addItem("5 seconds")
         time_selection.addItem("30 seconds")
         time_selection.addItem("1 minute")
         time_selection.currentIndexChanged.connect(self.handle_time_selection)
+        # Set Modbus COM port
+        label2 = QLabel("Set Modbus COM Port:")
+        label2.setStyleSheet("color: #ffffff; font: 14px;")
+        port_selection = QComboBox()
+        port_selection.setStyleSheet("background-color:#222; color: #ffffff; font: 14px;")
+        port_selection.addItem("COM3")
+        port_selection.addItem("COM4")
+        port_selection.addItem("COM5")
+        port_selection.addItem("COM6")
+        port_selection.currentIndexChanged.connect(self.handle_port_selection)
+        
         layout.addWidget(label1)
         layout.addWidget(time_selection)
-    
+        layout.addWidget(label2)
+        layout.addWidget(port_selection)
         self.config_window.setLayout(layout)
         self.config_window.show()
 
@@ -591,19 +608,20 @@ class DataWindow(QWidget):
             for column in range(8):
                 if column % 2 == 0:
                     index = int((row)+((column/2)*8))
-                    item = QStandardItem("Temp {}:".format(index))
+                    item = QStandardItem(f"Temp {index}:")
                     self.tc_model.setItem(row, column, item)
                 else:
                     item = QStandardItem("NA".format(index))
                     self.tc_model.setItem(row, column, item)
+
+        self.tc_model.item(0, 0).setText("Ambient:")
         table_view1 = QTableView()
         table_view1.horizontalHeader().setVisible(False)
-        # table_view1.verticalHeader().setDefaultSectionSize(300)
         table_view1.verticalHeader().setVisible(False)
         table_view1.setFixedHeight(260)
         table_view1.setModel(self.tc_model)
         table_view1.setStyleSheet(f"background-color: {DT_COLOR}; color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};"\
-                              "border-style: solid; border-width: 0 1px 1px")
+                "border-style: solid; border-width: 1px 1px 1px")
         # Temp Average
         temp_avg_layout1 = QHBoxLayout()
         label_1a = QLabel(" Average of Temps  ")
@@ -640,7 +658,6 @@ class DataWindow(QWidget):
         self.temp_avg_value_2c = QLabel(" = NA")
         self.temp_avg_value_2c.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-weight:bold;")
         temp_avg_layout2.addWidget(self.temp_avg_value_2c)
-
     #~~~~~~ Section 2: Pulse and Other Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.pulse_model = QStandardItemModel(3, 4)
         item1 = QStandardItem("Electric Energy:")
@@ -708,7 +725,6 @@ class DataWindow(QWidget):
         self.table_view3.horizontalHeader().setVisible(False)
         self.table_view3.verticalHeader().setVisible(False)
         self.table_view3.setModel(self.modbus_model)
-
     #~~~~~~ Section 4: Analog Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.analog_model = QStandardItemModel(1, 1)
         ai_item1 = QStandardItem("AI 1:  NA")
@@ -747,7 +763,7 @@ class DataWindow(QWidget):
         self.er_time_label.setStyleSheet(f"color: {DATA_FONT}; font: 14px; font-family:{FONT_STYLE};")
         
         self.meter_selection = QComboBox()
-        self.meter_selection.setStyleSheet(f"color: {DATA_FONT}; font: 14px;")
+        self.meter_selection.setStyleSheet(f"background-color: #111; color: {DATA_FONT}; font: 14px;")
         self.meter_selection.addItem("Gas Meter")
         self.meter_selection.addItem("120V Meter")
         self.meter_selection.addItem("208V Meter")
@@ -771,7 +787,6 @@ class DataWindow(QWidget):
         
         self.energy_rate_label = QLabel(" Energy Rate = ")
         self.energy_rate_label.setStyleSheet(f"color: #ffffff; font: 14px; font-family:{FONT_STYLE};")
-
     #~~~~~~ Adjust Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Organize structure of layout 
         self.layout.addWidget(label1)

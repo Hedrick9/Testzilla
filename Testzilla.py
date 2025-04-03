@@ -58,6 +58,7 @@ class Data:
         self.tc_modules = ni_daq.tc_modules
         self.ni_data = [None]*22
         self.mb_data = [[0]*13]
+        self.mb_port = "COM3"
         self.mb_connected = False
         self.data_log = []
         self.data_to_write = None
@@ -77,6 +78,7 @@ class Data:
         while self.stream == True:
             try: 
                 if self.ni_daq.connected == True:
+                    time.sleep(0.1) # Allow time to accumulate buffer
                     self.update_ni_data()
                 else: 
                     self.stream = False
@@ -107,11 +109,11 @@ class Data:
             _write = [*average_data[0:2], *self.data_log[-1][4:9], *average_data[2:]]
             self.data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
 
-    def modbus_thread(self, device, port="COM6"):
+    def modbus_thread(self, device):
         # Initialize modbus client connection and start reading modbus data
         print(f"Attempting to connect to device: {device}")
         try:
-            client = mb.init(port=port)
+            client = mb.init(port=self.mb_port)
             mb.write_(client, 20000, 5555) # reset energy accumulators    
             thread = threading.Thread(target=mb.data_stream, args=(client, self,), daemon=True)
             thread.start()
@@ -134,7 +136,7 @@ if __name__ == "__main__":
     ni_daq.setup_testzilla()
     data = Data(ni_daq)
     # Initialize modbus client connection and start reading modbus data
-    data.modbus_thread(device="Shark200", port="COM3")
+    data.modbus_thread(device="Shark200")
  #~~~~~~~ USE THIS SECTION TO THREAD NI DATA PROCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~
     data.stream = True
     try:
