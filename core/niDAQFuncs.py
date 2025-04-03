@@ -254,7 +254,7 @@ class NI:
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                        cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
             tc_task1.timing.cfg_samp_clk_timing(
-                    rate=100,
+                    rate=1000,
                     sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
                     samps_per_chan=1)
             tc_task1.start()
@@ -268,7 +268,7 @@ class NI:
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                        cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
             tc_task1.timing.cfg_samp_clk_timing(
-                    rate=100,
+                    rate=1000,
                     sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
                     samps_per_chan=1)
             tc_task1.start()
@@ -294,13 +294,13 @@ class NI:
                     thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                     cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
             tc_task1.timing.cfg_samp_clk_timing(
-                    rate=100,
+                    rate=1000,
                     sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
                     samps_per_chan=1)
             tc_task1.start()
             tc_task1.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             tc_task2.timing.cfg_samp_clk_timing(
-                    rate=100,
+                    rate=1000,
                     sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
                     samps_per_chan=1)
             tc_task2.start()
@@ -313,9 +313,9 @@ class NI:
     def setup_testzilla(self):
         print("Initializing Testzilla setup...")
         # Uncomment below for loading Persisted Tasks
-        self.load_ptask("tc_task1")
-        self.load_ptask("tc_task2")
-        # self.setup_tc()
+        # self.load_ptask("tc_task1")
+        # self.load_ptask("tc_task2")
+        self.setup_tc()
         self.setup_ci()
         if self.ai_volt_slot is not None:
             self.setup_ai_volt()
