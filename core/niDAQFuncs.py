@@ -253,6 +253,12 @@ class NI:
                        units=nidaqmx.constants.TemperatureUnits.DEG_F,
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                        cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
+            tc_task1.timing.cfg_samp_clk_timing(
+                    rate=100,
+                    sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
+                    samps_per_chan=1)
+            tc_task1.start()
+            tc_task1.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             self.task_dict["tc_task1"] = tc_task1
         elif self.tc_modules == 1 and self.four_chan == False:
             tc_task1 = nidaqmx.Task() 
@@ -261,7 +267,12 @@ class NI:
                        units=nidaqmx.constants.TemperatureUnits.DEG_F,
                        thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                        cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
-            tc_task1.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
+            tc_task1.timing.cfg_samp_clk_timing(
+                    rate=100,
+                    sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
+                    samps_per_chan=1)
+            tc_task1.start()
+            tc_task1.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             self.task_dict["tc_task1"] = tc_task1
         elif self.tc_modules == 2 and self.four_chan == False:
             tc_task1 = nidaqmx.Task()
@@ -282,8 +293,18 @@ class NI:
                     units=nidaqmx.constants.TemperatureUnits.DEG_F,
                     thermocouple_type=nidaqmx.constants.ThermocoupleType.K,
                     cjc_source=nidaqmx.constants.CJCSource.BUILT_IN)
-            tc_task1.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
-            tc_task2.ai_channels[0].ai_adc_timing_mode = nidaqmx.constants.ADCTimingMode.HIGH_SPEED
+            tc_task1.timing.cfg_samp_clk_timing(
+                    rate=100,
+                    sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
+                    samps_per_chan=1)
+            tc_task1.start()
+            tc_task1.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
+            tc_task2.timing.cfg_samp_clk_timing(
+                    rate=100,
+                    sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS,
+                    samps_per_chan=1)
+            tc_task2.start()
+            tc_task2.read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             self.task_dict["tc_task1"] = tc_task1
             self.task_dict["tc_task2"] = tc_task2
         else:
@@ -291,8 +312,10 @@ class NI:
     #~~ Setup all modules relevant to Testzilla program 
     def setup_testzilla(self):
         print("Initializing Testzilla setup...")
-        self.load_ptask("tc_task1")
-        self.load_ptask("tc_task2")
+        # Uncomment below for loading Persisted Tasks
+        # self.load_ptask("tc_task1")
+        # self.load_ptask("tc_task2")
+        self.setup_tc()
         self.setup_ci()
         if self.ai_volt_slot is not None:
             self.setup_ai_volt()
