@@ -313,9 +313,9 @@ class NI:
     def setup_testzilla(self):
         print("Initializing Testzilla setup...")
         # Uncomment below for loading Persisted Tasks
-        # self.load_ptask("tc_task1")
-        # self.load_ptask("tc_task2")
-        self.setup_tc()
+        self.load_ptask("tc_task1")
+        self.load_ptask("tc_task2")
+        # self.setup_tc()
         self.setup_ci()
         if self.ai_volt_slot is not None:
             self.setup_ai_volt()
