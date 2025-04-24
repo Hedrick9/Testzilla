@@ -359,25 +359,39 @@ class NI:
             data.extend([0]*16)
         return data
     #~~~~ Class method for reading continuous data from ni 9214 module ~~~~~~~~
-    def read_tc_data_continuous(self):
-        data = []
+    def _read_tc_continuous(self):
         if self.four_chan == True: 
             raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            data = np.array(raw, dtype=float).mean(axis=1).tolist()
-            data = data + [0]*(16-len(data))
-        elif self.tc_modules == 1 and self.four_chan == False:
+            data = np.array(raw, dtype=float).mean(axis=1) if raw else np.empty(0)
+            # pad up to 16 so downstream code never crashes
+            return np.pad(data, (0, 16 - data.size), constant_values=0.0)
+            # data = data + [0]*(16-len(data))
+        if self.tc_modules == 1:
             raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            data = np.array(raw, dtype=float).mean(axis=1).tolist()
-        elif self.tc_modules == 2:
+            return np.array(raw, dtype=float).mean(axis=1) if raw else np.empty()
+        if self.tc_modules == 2:
             raw1 = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             raw2 = self.task_dict["tc_task2"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            data = np.array(raw1, dtype=float).mean(axis=1).tolist()
-            data2 = np.array(raw2, dtype=float).mean(axis=1).tolist()
-            data.extend(data2)
-        else:
-            data.extend([0]*16)
-        return data
-
+            if raw1 and raw2:
+                d1 = np.array(raw1, dtype=float).mean(axis=1)
+                d2 = np.array(raw2, dtype=float).mean(axis=1)
+                return np.concatenate((d1,d2))
+            return np.empty(0)
+        # fall-back
+        return np.zeros(16, dtype=float)
+    #~~~~ Class method for reading continuous data from ni 9214 module ~~~~~~~~
+    def read_tc_data_continuous(self, max_retries=5, retry_delay=0.1):
+        """
+        Returns a *valid* list of temperature averages.
+        Retries up to 'max_retries' times if buffer is empty.
+        Raises RunetimeError if still empty.
+        """
+        for _ in range(max_retries):
+            data = self._read_tc_continuous()
+            if data.size:
+                return data.tolist()
+            time.sleep(retry_delay)
+        raise RunetimeError("Thermocouple read timed-out: no data in buffer")
     #~~~~ Class method for reading data from NI-9226 module ~~~~~~~~~~~~~~~~~~~
     def read_rtd_data(self):
         data = []

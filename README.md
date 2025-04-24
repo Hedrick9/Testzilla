@@ -1,7 +1,7 @@
 # Testzilla
 An application that provides an intuitive user interface for laboratory testing. A back-end designed to interface with multiple DAQ systems.
 
-## Testzilla Current Version: 2.06
+## Testzilla Current Version: 2.07
 
 ## Testzilla TODO List:
 - [x] Fix format of test time
@@ -45,7 +45,7 @@ An application that provides an intuitive user interface for laboratory testing.
 - [ ] Add burger test capability
 - [ ] Update modbus script 
     - [ ] Investigate Alternative Libraries
-    - [ ] Allow for manual reboot
+    - [x] Allow for manual reboot
 
 ## Software Requirements:
 ### NI MAX and related drivers: 
