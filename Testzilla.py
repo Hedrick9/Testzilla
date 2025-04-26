@@ -33,10 +33,8 @@ class TestTime:
 
     def update_time(self):
         self.clock_time = time.monotonic() - self.initial_clock_time
-        self.test_time += 1
+        self.test_time = int(self.clock_time)
         self.current_index += 1
-        if self.clock_time - self.test_time > 1:
-            self.test_time += 1
         if self.test_time % self.timing_interval == 0:
             self.time_to_write = True
             self.test_time_min = round(self.test_time/60, 2)
@@ -78,7 +76,7 @@ class Data:
         while self.stream == True:
             try: 
                 if self.ni_daq.connected == True:
-                    time.sleep(0.1) # Allow time to accumulate buffer
+                    time.sleep(0.5) # Allow time to accumulate buffer
                     self.update_ni_data()
                 else: 
                     self.stream = False
