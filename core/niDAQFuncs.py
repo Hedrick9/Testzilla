@@ -20,6 +20,7 @@ lab use.
 #                                   Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import numpy as np
+import time
 
 import nidaqmx
 import nidaqmx.system
@@ -362,17 +363,19 @@ class NI:
     def _read_tc_continuous(self):
         if self.four_chan == True: 
             raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            data = np.array(raw, dtype=float).mean(axis=1) if raw else np.empty(0)
+            # check if request returned vaid data otherwise return empty numpy array 
+            data = np.array(raw, dtype=float).mean(axis=1) if len(raw[0]) else np.empty(0)
             # pad up to 16 so downstream code never crashes
-            return np.pad(data, (0, 16 - data.size), constant_values=0.0)
-            # data = data + [0]*(16-len(data))
+            return np.pad(data, (0, 16 - data.size), constant_values=0.0) if data.size else np.empty(0)
         if self.tc_modules == 1:
             raw = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            return np.array(raw, dtype=float).mean(axis=1) if raw else np.empty()
+            # check if request returned vaid data otherwise return empty numpy array 
+            return np.array(raw, dtype=float).mean(axis=1) if len(raw[0]) else np.empty(0)
         if self.tc_modules == 2:
             raw1 = self.task_dict["tc_task1"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
             raw2 = self.task_dict["tc_task2"].read(number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE)
-            if raw1 and raw2:
+            # check if request returned vaid data otherwise return empty numpy array 
+            if len(raw1[0]) and len(raw2[0]):
                 d1 = np.array(raw1, dtype=float).mean(axis=1)
                 d2 = np.array(raw2, dtype=float).mean(axis=1)
                 return np.concatenate((d1,d2))

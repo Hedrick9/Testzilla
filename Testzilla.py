@@ -76,7 +76,7 @@ class Data:
         while self.stream == True:
             try: 
                 if self.ni_daq.connected == True:
-                    time.sleep(0.5) # Allow time to accumulate buffer
+                    time.sleep(0.2) # Allow time to accumulate buffer
                     self.update_ni_data()
                 else: 
                     self.stream = False
