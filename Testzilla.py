@@ -27,14 +27,12 @@ class TestTime:
         self.test_time = 0
         self.test_time_min = 0
         self.timing_interval = timing_interval # sample every n seconds
-        self.current_index = 0
         self.testing = False
         self.time_to_write = False
 
     def update_time(self):
         self.clock_time = time.monotonic() - self.initial_clock_time
         self.test_time = int(self.clock_time)
-        self.current_index += 1
         if self.test_time % self.timing_interval == 0:
             self.time_to_write = True
             self.test_time_min = round(self.test_time/60, 2)
@@ -46,7 +44,6 @@ class TestTime:
         self.clock_time = 0
         self.test_time = 0
         self.test_time_min = 0
-        self.current_index = 0
 
 #~~~~~~~~~ Get Data and Handle Data Related Actions ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Data:
@@ -65,6 +62,7 @@ class Data:
         self.pcfs = [1,0.0125, 1, 1] # pcfs = pulse conversion factors
         self.pulse_data = [0, 0, 0, 0]
         self.pulse_reset = [0, 0, 0, 0]
+        self.current_index = 0
 
     def update_ni_data(self):
         self.ni_data = self.ni_daq.read_all_tz()
@@ -106,7 +104,11 @@ class Data:
             average_data = pd.DataFrame(self.data_log[-test_time.timing_interval:].copy()).drop(columns=[0,1,4,5,6,7,8]).mean()
             _write = [*average_data[0:2], *self.data_log[-1][4:9], *average_data[2:]]
             self.data_to_write = time_data.copy() + [None if np.isnan(item) else round(item,2) for item in _write]
-
+        # Limit memory storage for data log to 6 hours
+        self.current_index = len(self.data_log)
+        if len(self.data_log) > 21600: 
+            self.data_log.pop(0)
+        
     def modbus_thread(self, device):
         # Initialize modbus client connection and start reading modbus data
         print(f"Attempting to connect to device: {device}")

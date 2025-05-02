@@ -34,7 +34,7 @@ PRIMARY_COLOR = "#000000"
 SECONDARY_COLOR = "#0f0f0f"
 TRI_COLOR = "#121212"  
 DT_COLOR = "#050505"
-BUTTON_COLOR = "#0a0a0a"
+BUTTON_COLOR = "#111111"
 FONT_COLOR1 = "#ffffff"
 # DATA_FONT = "#b5b5b5"
 DATA_FONT = "#ffffff"
@@ -147,19 +147,19 @@ class MainWindow(QMainWindow):
         button_style1 = f"""QPushButton {{background-color: {BUTTON_COLOR}; 
                                           color: #ffffff; 
                                           font-family:{FONT_STYLE}; 
-                                          font-size: {16}px;}}
+                                          font-size: {18}px;}}
                   QPushButton:hover {{background-color: #225c40;}}
                   QPushButton:pressed {{background-color: #777777;}}"""
         button_style2 = f"""QPushButton {{background-color: {BUTTON_COLOR}; 
                                           color: #ffffff; 
                                           font-family:{FONT_STYLE};
-                                          font-size: {16}px;}}
+                                          font-size: {18}px;}}
                           QPushButton:hover {{background-color: #b8494d;}}
                           QPushButton:pressed {{background-color: #777777;}}"""
         button_style3 = f"""QPushButton {{background-color: {BUTTON_COLOR}; 
                                           color: #ffffff; 
                                           font-family:{FONT_STYLE};
-                                          font-size: {16}px;}}
+                                          font-size: {18}px;}}
                           QPushButton:hover {{background-color: #555555;}}
                           QPushButton:pressed {{background-color: #777777;}}"""
         # Create a "Start" push button and its slot for handling button click event
@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
         view_data_action.triggered.connect(self.data_window.display)
         data_menu.addAction(view_data_action)
         
-        # Add a Graph menu
+        # Add Temperature Graph menu
         self.graph_menu = QMenu("Graph", self.menubar)
         self.tc_items = []
         for i in range(self.tc_modules*16):
@@ -255,6 +255,15 @@ class MainWindow(QMainWindow):
         set_graph_action = QAction("Set Graph Range", self)
         set_graph_action.triggered.connect(self.set_graph_window)
         self.graph_menu.addAction(set_graph_action)
+        # Add Graph menu for other channels
+        # self.graph_menu2 = QMenu("Graph 2", self.menubar)
+        # graph_action1 = QAction("mb.Watts", self.graph_menu2, checkable=True)
+        # graph_action2 = QAction("mb.Voltage", self.graph_menu2, checkable=True)
+        # self.graph_items = [graph_action1, graph_action2]
+        # for item in self.graph_items: 
+        #     self.graph_menu2.addAction(item)
+        # self.menubar.addMenu(self.graph_menu2)
+        # self.graph_menu2.triggered.connect(self.show_graph2_window)
         # Add a Configuration menu
         config_menu = self.menubar.addMenu("Config")
         setup_config_action = QAction("Setup Config", self)
@@ -354,7 +363,10 @@ class MainWindow(QMainWindow):
     #~~~ DISPLAY GRAPH CHANNEL LIST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     def show_graph_window(self):
         self.graph_menu.exec()
-
+    # #~~~ DISPLAY GRAPH CHANNEL LIST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+    # def show_graph2_window(self):
+    #     self.graph_menu2.exec()
+    #
     #~~~ SET GRAPH RANGE FUNCTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def set_graph_window(self):
         self.graph_window = QWidget()
@@ -396,7 +408,7 @@ class MainWindow(QMainWindow):
     def handle_port_selection(self, index):
         port_dict = {0: "COM3", 1: "COM4", 2: "COM5", 3: "COM6"}
         self.data.mb_port = port_dict[index]
-        print(self.data.mb_port)
+        print(f"Changing Modbus Port to: {self.data.mb_port}")
 
     #~~~ CONFIGURATION SETTING FUNCTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def set_config_window(self):
@@ -876,7 +888,7 @@ class DataWindow(QWidget):
         self.analog_model.item(0, 0).setText(f"AI 1:  {data.data_log[-1][9]}")
         self.analog_model.item(0, 1).setText(f"AI 2:  {data.data_log[-1][10]}")
         # Update the values in analysis section 
-        self.index_label.setText("Current Index = {}".format(test_time.current_index))
+        self.index_label.setText("Current Index = {}".format(data.current_index))
         try:
             st_i = int(self.start_index_input.text())
             et_i = int(self.end_index_input.text())
